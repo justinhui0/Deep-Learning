@@ -1,5 +1,7 @@
+from operator import neg
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.lib.index_tricks import diag_indices_from
 from sklearn.svm import LinearSVC
 from sklearn.datasets import make_classification
 from sklearn.preprocessing import StandardScaler
@@ -135,34 +137,20 @@ def trainKNN(data):
     neigh.fit(X,y.ravel())
     return neigh
 
+def plt_conf_matrix(X_classifer, y_actual, y_pred, training, testing): 
+    Z = confusion_matrix(y_actual,y_pred)
+    print(Z)
+    plot_confusion_matrix(X_classifer, testing[:,:9], y_actual) #cite grepper maybe?
+    plt.show()  
+
+
 def split_dataset(data, percentage):
     training = data[:int(len(data) * percentage)]
     testing = data[int(len(data) * percentage):]
     return (training, testing)
 
-def compare(results, testing_data):
-
-    #FP = FN = TP = TN = 0
-    y_real = testing_data[:,9:]
-    Z = confusion_matrix(results,y_real)
-
-    
-
-    # print(Z.ravel(),len(Z.ravel()))
-    # TN, FP, FN, TP = Z.ravel()
 
 
-
-    # if TP + FN == 0: 
-    #     row1 = [0 , 0]
-    # else:
-    #     row1 = [TP/ (TP + FN), FN / (TP + FN)]
-    # if TN + FP == 0:
-    #     row2 = [0 , 0]
-    # else:
-    #     row2 = [FP/ (TN + FP), TN / (TN + FP)] 
-    # return [row1,row2]
-    
     
 
 board = [1,-1,1,1,-1,1,1,-1,-1]
@@ -175,18 +163,11 @@ np.random.shuffle(tictac_final)
 final_training, final_testing = split_dataset(tictac_final, percentage)
 
 #kneigh
-neigh = trainKNN(final_training)
-knn_results = kneigh(final_testing,neigh)
-#row1, row2 = compare(knn_results, final_testing)
-y = final_testing[:,9:]  #input
-#y = np.array([knn_results]).T          #output
-#print(len(X),len(y))
-Z = confusion_matrix(y,knn_results)
-print(Z)
-plot_confusion_matrix(neigh, final_testing[:,:9],y)
-plt.show()
+neigh = trainKNN(final_training)    # KNN Classifier
+knn_results = kneigh(final_testing,neigh)   # y_pred from KNN
+y_actual = final_testing[:,9:] 
+plt_conf_matrix(neigh,y_actual,knn_results,final_training,final_testing) 
 
-#print("TP: %0.2f, FN: %0.2f\nFP: %.2f, TN: %.2f" % (row1[0], row1[1], row2[0], row2[1]))
 
 #SVM
 
@@ -202,8 +183,8 @@ single_training, single_testing = split_dataset(tictac_single, percentage)
 #kneigh
 neigh = trainKNN(single_training)
 knn_results = kneigh(single_testing,neigh)
-row1, row2 = compare(knn_results, single_testing)
-#print("TP: %0.2f, FN: %0.2f\nFP: %.2f, TN: %.2f" % (row1[0], row1[1], row2[0], row2[1]))
+y_actual = single_testing[:,9:]
+plt_conf_matrix(neigh,y_actual,knn_results,single_training,single_testing)
 
 #linearSVM(tictac_final)
 
