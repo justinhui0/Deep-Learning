@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.svm import LinearSVC
 from sklearn.datasets import make_classification
@@ -6,6 +7,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.neighbors import NearestNeighbors
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import datasets
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix
 import random
 
 #check if any player won
@@ -138,44 +140,28 @@ def split_dataset(data, percentage):
     testing = data[int(len(data) * percentage):]
     return (training, testing)
 
-def compare(results, testing_data, dataset):
+def compare(results, testing_data):
 
-    FP = FN = TP = TN = 0
+    #FP = FN = TP = TN = 0
+    y_real = testing_data[:,9:]
+    Z = confusion_matrix(results,y_real)
+
     
-    y_real = (x[0] for x in testing_data[:,9:])
-    #final
-    if dataset == 0:
-        for test_y, real_y in zip(results, y_real):
-            if test_y == real_y and test_y == 1:
-                TP += 1
-            elif test_y == 1 and real_y == -1:
-                FP += 1
-            elif test_y == -1 and real_y == 1 :
-                FN += 1
-            elif test_y == real_y and test_y == -1:
-                TN += 1
-    #single  
-    elif dataset == 1:
-        for test_y, real_y in zip(results, y_real):
-            if test_y == real_y:
-                TP += 1
-            elif test_y > real_y:
-                FP += 1
-            elif test_y < real_y :
-                FN += 1
-            elif test_y == real_y:
-                TN += 1
+
+    # print(Z.ravel(),len(Z.ravel()))
+    # TN, FP, FN, TP = Z.ravel()
 
 
-    if TP + FN == 0: 
-        row1 = [0 , 0]
-    else:
-        row1 = [TP/ (TP + FN), FN / (TP + FN)]
-    if TN + FP == 0:
-        row2 = [0 , 0]
-    else:
-        row2 = [FP/ (TN + FP), TN / (TN + FP)] 
-    return [row1,row2]
+
+    # if TP + FN == 0: 
+    #     row1 = [0 , 0]
+    # else:
+    #     row1 = [TP/ (TP + FN), FN / (TP + FN)]
+    # if TN + FP == 0:
+    #     row2 = [0 , 0]
+    # else:
+    #     row2 = [FP/ (TN + FP), TN / (TN + FP)] 
+    # return [row1,row2]
     
     
 
@@ -191,8 +177,16 @@ final_training, final_testing = split_dataset(tictac_final, percentage)
 #kneigh
 neigh = trainKNN(final_training)
 knn_results = kneigh(final_testing,neigh)
-row1, row2 = compare(knn_results, final_training)
-print("TP: %0.2f, FN: %0.2f\nFP: %.2f, TN: %.2f" % (row1[0], row1[1], row2[0], row2[1]))
+#row1, row2 = compare(knn_results, final_testing)
+y = final_testing[:,9:]  #input
+#y = np.array([knn_results]).T          #output
+#print(len(X),len(y))
+Z = confusion_matrix(y,knn_results)
+print(Z)
+plot_confusion_matrix(neigh, final_testing[:,:9],y)
+plt.show()
+
+#print("TP: %0.2f, FN: %0.2f\nFP: %.2f, TN: %.2f" % (row1[0], row1[1], row2[0], row2[1]))
 
 #SVM
 
@@ -209,7 +203,7 @@ single_training, single_testing = split_dataset(tictac_single, percentage)
 neigh = trainKNN(single_training)
 knn_results = kneigh(single_testing,neigh)
 row1, row2 = compare(knn_results, single_testing)
-print("TP: %0.2f, FN: %0.2f\nFP: %.2f, TN: %.2f" % (row1[0], row1[1], row2[0], row2[1]))
+#print("TP: %0.2f, FN: %0.2f\nFP: %.2f, TN: %.2f" % (row1[0], row1[1], row2[0], row2[1]))
 
 #linearSVM(tictac_final)
 
