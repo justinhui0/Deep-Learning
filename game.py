@@ -36,6 +36,8 @@ def loadBoard():
 
     # determines who's turn it is
     turn = input("0 to go first, 1 to go second:\n")
+    #determines which regresser to play against
+    regressor = input("Enter KNN/linear/MLP")
 
     while not get_state(board):
         if turn == "0":
@@ -69,31 +71,13 @@ def loadBoard():
                 turn = "1"
 
         elif turn == "1":
-            move = input("input?\n")
-            if 0 > int(move) or int(move) > 8:
-                print("invalid move\n")
-            elif board[int(move)] != 0:
-                print("invalid move\n")
-            else:
-                if move == "0":
-                    board[0] = -1
-                if move == "1":
-                    board[1] = -1
-                if move == "2":
-                    board[2] = -1
-                if move == "3":
-                    board[3] = -1
-                if move == "4":
-                    board[4] = -1
-                if move == "5":
-                    board[5] = -1
-                if move == "6":
-                    board[6] = -1.,
-                if move == "7":
-                    board[7] = -1
-                if move == "8":
-                    board[8] = -1
-                turn = "0"
+            if(regressor == "KNN"):
+
+            elif(regressor == "linear"):
+            
+            elif(regressor == "MLP"):
+            
+            turn = "0"
 
         printboard(board)
 
