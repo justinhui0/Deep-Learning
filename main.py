@@ -41,8 +41,9 @@ def k_fold_validation_classifier(k, X, y, model):
     normed_matrix = normalize(mean_conf_matrix, axis=1, norm='l1')
     return avg_acc_score, normed_matrix
 
-# TODO implement k_fold for regression (or investigate how previous func can be made to work w/ regressors)
+
 def k_fold_validation_regressor(k, X, y, model):
+    # TODO implement k_fold for regression (or investigate how previous func can be made to work w/ regressors)
     return (0,0)
 
 # CLASSIFIERS
@@ -189,6 +190,7 @@ def run_svm_reg_multi_accuracy():
 # implement regressors on single and multi
 # tie regressors to tic tac game
 # create report/video
+# cite this https://users.auth.gr/~kehagiat/Research/GameTheory/12CombBiblio/TicTacToe.pdf
 # submit!
 
 if __name__ == '__main__':
