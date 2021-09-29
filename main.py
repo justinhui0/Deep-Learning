@@ -28,30 +28,50 @@ def k_fold_validation(k, X, y, model, is_lin_regressor=False, is_multi=False):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
 
-        if not is_lin_regressor:
+        if is_lin_regressor:
             if is_multi:
-                model.fit(X_train,y_train)
+                pred_values = np.full_like(y, 1)
+                for i in range(9):
+                    curr_out = y[:,i]
+                    theta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(curr_out)
+                    curr_pred = X_test.dot(theta)
+                    print(curr_out.shape, curr_pred.shape, pred_values.shape)
+                    pred_values[:,i] = curr_pred
             else:
-                model.fit(X_train,y_train.ravel())
+                theta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+                pred_values = X_test.dot(theta)
+        elif is_multi:
+            model.fit(X_train,y_train)
+            pred_values = model.predict(X_test)       
+        else:
+            model.fit(X_train,y_train.ravel())
             pred_values = model.predict(X_test)
-
-            #TODO make sure works for all tests
-        else:
-            theta = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
-            pred_values = X_test.dot(theta)
-        
-        pred_values = pred_values.round().clip(0,8)
-
+            
+        pred_values = pred_values.round()
         if is_multi:
-            acc = accuracy_score(np.array([pred_values , y_test]), np.ones((9, 9)))
+            pred_values = pred_values.clip(0,1)
         else:
-            acc = accuracy_score(pred_values , y_test)
-        acc_score.append(acc)
-        if is_multi:
-            conf_matrix = multilabel_confusion_matrix(y_test, pred_values)
-        else:
-            conf_matrix = confusion_matrix(y_test, pred_values)
-        conf_matrices.append(conf_matrix)
+            pred_values.clip(0,8)
+
+        # if is_multi:
+        #     print(len(pred_values), len(pred_values[0]),pred_values)
+        #     print(len(y_test),len(pred_values[0]), y_test)
+        #     acc = accuracy_score(np.array([pred_values , y_test]), np.ones((9, 9)))
+        # else:
+
+        try:
+            acc = accuracy_score(y_test , pred_values )
+            acc_score.append(acc)
+            if is_multi:
+                conf_matrix = multilabel_confusion_matrix(y_test, pred_values)
+            else:
+                conf_matrix = confusion_matrix(y_test, pred_values)
+            conf_matrices.append(conf_matrix)
+        except:
+            print("failed with")
+            print(len(pred_values), len(pred_values[0]),pred_values)
+            print(len(y_test),len(pred_values[0]), y_test)
+
     avg_acc_score = sum(acc_score)/k
     mean_conf_matrix = np.mean(conf_matrices, axis=0)
     if is_multi:
@@ -165,7 +185,7 @@ def run_mlp_reg_single_accuracy():
 
 #SVM
 def run_svm_reg_single_accuracy():
-    acc_avg, norm_conf_matrix = k_fold_validation(10, tictac_single_X, tictac_single_y, None, is_lin_regressor=True)
+    acc_avg, norm_conf_matrix = k_fold_validation(10, tictac_single_X, tictac_single_y, None, is_lin_regressor=True,is_multi=False)
     print("Accuracy score for tictac_single, SVM Regressor:\n%f" % acc_avg )
     print("Confusion matrix for tictac_single, SVM Regressor:")
     print(norm_conf_matrix)
@@ -191,13 +211,15 @@ def run_mlp_reg_multi_accuracy():
 #SVM
 #Ref: https://towardsdatascience.com/performing-linear-regression-using-the-normal-equation-6372ed3c57
 def run_svm_reg_multi_accuracy():
-    acc_avg, norm_conf_matrix = k_fold_validation(10, tictac_multi_X, tictac_multi_y, None, is_multi=True,is_lin_regressor=True)
+    acc_avg, norm_conf_matrix = k_fold_validation(10, tictac_multi_X, tictac_multi_y, None, is_lin_regressor=True, is_multi=True)
     print("Accuracy score for tictac_multi, SVM Regressor:\n%f" % acc_avg )
     print("Confusion matrix for tictac_multi, SVM Regressor:")
     print(norm_conf_matrix)
 
-# TODO 
+# TODO
+# make sure works for all tests
 # produce confusion matrix plots
+# integrate w/ game and test
 # create report/video
 # cite this https://users.auth.gr/~kehagiat/Research/GameTheory/12CombBiblio/TicTacToe.pdf
 # submit!
@@ -212,8 +234,9 @@ if __name__ == '__main__':
     #run_mlp_reg_single_accuracy()
     #run_svm_reg_single_accuracy()
 
-    run_knn_reg_multi_accuracy()
-    run_mlp_reg_multi_accuracy()
+    #run_knn_reg_multi_accuracy()
+    #run_mlp_reg_multi_accuracy()
+    run_svm_reg_single_accuracy()
     run_svm_reg_multi_accuracy()
 
     #code skeleton for plotting, not sure how to implement w/ k-fold tho
