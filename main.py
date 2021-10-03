@@ -108,7 +108,7 @@ def k_fold_validation(k, X, y, model, is_lin_regressor=False, is_multi=False):
         #     print(len(y_test),len(pred_values[0]), y_test)
         #     acc = accuracy_score(np.array([pred_values , y_test]), np.ones((9, 9)))
         # else:
-        print("shapes:", pred_values.shape, y_test.shape, pred_values)
+        #print("shapes:", pred_values.shape, y_test.shape, pred_values)
         try:
             acc = accuracy_score(y_test , pred_values )
             acc_score.append(acc)
@@ -130,7 +130,17 @@ def k_fold_validation(k, X, y, model, is_lin_regressor=False, is_multi=False):
         normed_matrix = normalize(mean_conf_matrix, axis=1, norm='l1')
     return avg_acc_score, normed_matrix
 
-
+# Plot Classier
+def pltClassierMatrix(norm_conf_matrix, title):
+    _, ax = plt.subplots()
+    afig = ax.matshow(norm_conf_matrix,cmap=plt.cm.RdYlGn)
+    plt.colorbar(afig)
+    ax.set_title(title)
+    for i in range(len(norm_conf_matrix)):
+        for j in range (len(norm_conf_matrix[0])):
+            c = round(norm_conf_matrix[j][i],3)
+            ax.text(i, j, str(c), va='center', ha='center')
+    plt.show()
 
 # CLASSIFIERS
 def KNN_class_get_model(X, y):
@@ -174,8 +184,7 @@ def run_knn_class_final_accuracy():
     print("Accuracy score for tictac_final, KNN:\n%f" % acc_avg )
     print("Confusion matrix for tictac_final, KNN:")
     print(norm_conf_matrix)
-    plot_confusion_matrix(knn_classifer.fit(tictac_final_X, tictac_final_y), tictac_final_X, tictac_final_y)
-    plt.show()
+    pltClassierMatrix(norm_conf_matrix, "KNN Classifier - Final")
 
 #MLP
 def run_mlp_class_final_accuracy():
@@ -184,8 +193,7 @@ def run_mlp_class_final_accuracy():
     print("Accuracy score for tictac_final, MLP:\n%f" % acc_avg )
     print("Confusion matrix for tictac_final, MLP:")
     print(norm_conf_matrix)
-    plot_confusion_matrix(mlp_classifer.fit(tictac_final_X, tictac_final_y), tictac_final_X, tictac_final_y)
-    plt.show()
+    pltClassierMatrix(norm_conf_matrix, "MLP Classifier - Final")
 
 #SVM
 def run_svm_class_final_accuracy():
@@ -194,8 +202,7 @@ def run_svm_class_final_accuracy():
     print("Accuracy score for tictac_final, SVM:\n%f" % acc_avg )
     print("Confusion matrix for tictac_final, SVM:")
     print(norm_conf_matrix)
-    plot_confusion_matrix(SVM_classifier.fit(tictac_final_X, tictac_final_y), tictac_final_X, tictac_final_y)
-    plt.show()
+    pltClassierMatrix(norm_conf_matrix, "SVM Classifier - Final")
 
 #SINGLE
 #KNN
@@ -205,8 +212,7 @@ def run_knn_class_single_accuracy():
     print("Accuracy score for tictac_single, KNN Classifier:\n%f" % acc_avg )
     print("Confusion matrix for tictac_single, KNN Classifier:")
     print(norm_conf_matrix)
-    plot_confusion_matrix(knn_classifer.fit(tictac_final_X, tictac_final_y), tictac_final_X, tictac_final_y)
-    plt.show()
+    pltClassierMatrix(norm_conf_matrix, "KNN Classifier - Single")
 
 #MLP
 def run_mlp_class_single_accuracy():
@@ -215,8 +221,7 @@ def run_mlp_class_single_accuracy():
     print("Accuracy score for tictac_single, MLP Classifier:\n%f" % acc_avg )
     print("Confusion matrix for tictac_single, MLP Classifier:")
     print(norm_conf_matrix)
-    plot_confusion_matrix(mlp_classifer.fit(tictac_final_X, tictac_final_y), tictac_final_X, tictac_final_y)
-    plt.show()
+    pltClassierMatrix(norm_conf_matrix, "MLP Classifier - Single")
 
 #SVM
 def run_svm_class_single_accuracy():
@@ -225,8 +230,7 @@ def run_svm_class_single_accuracy():
     print("Accuracy score for tictac_single, SVM Classifier:\n%f" % acc_avg )
     print("Confusion matrix for tictac_single, SVM Classifier:")
     print(norm_conf_matrix)
-    plot_confusion_matrix(SVM_classifer.fit(tictac_final_X, tictac_final_y), tictac_final_X, tictac_final_y)
-    plt.show()
+    pltClassierMatrix(norm_conf_matrix, "SVM Classifier - Single")
 
 
 #REGRESSORS
@@ -239,7 +243,6 @@ def run_knn_reg_multi_accuracy():
     acc_avg, norm_conf_matrix = k_fold_validation(10, tictac_multi_X, tictac_multi_y, knn_classifier, is_multi=True)
     print("Accuracy score for tictac_multi, KNN Regressor:\n%f" % acc_avg )
     print("Confusion matrix for tictac_multi, KNN Regressor:")
-    print(norm_conf_matrix)
 
 #MLP
 def run_mlp_reg_multi_accuracy():
@@ -247,7 +250,6 @@ def run_mlp_reg_multi_accuracy():
     acc_avg, norm_conf_matrix = k_fold_validation(10, tictac_multi_X, tictac_multi_y, mlp_classifier,is_multi=True)
     print("Accuracy score for tictac_multi, MLP Regressor:\n%f" % acc_avg )
     print("Confusion matrix for tictac_multi, MLP Regressor:")
-    print(norm_conf_matrix)
 
 #SVM
 #Ref: https://towardsdatascience.com/performing-linear-regression-using-the-normal-equation-6372ed3c57
@@ -256,7 +258,6 @@ def run_svm_reg_multi_accuracy():
      #k_fold_validation(10, tictac_multi_X, tictac_multi_y, None, is_lin_regressor=True, is_multi=True)
     print("Accuracy score for tictac_multi, SVM Regressor:\n%f" % acc_avg )
     print("Confusion matrix for tictac_multi, SVM Regressor:")
-    print(norm_conf_matrix)
 
 # TODO
 # make sure works for all tests
@@ -272,13 +273,19 @@ if __name__ == '__main__':
     tictac_final_X, tictac_final_y = load_dataset('tictac_final.txt')
     tictac_multi_X, tictac_multi_y = load_dataset('tictac_multi.txt')
     
-    #run_knn_reg_single_accuracy()
-    #run_mlp_reg_single_accuracy()
-    #run_svm_reg_single_accuracy()
+    # run_knn_reg_single_accuracy()
+    # run_mlp_reg_single_accuracy()
+    # run_svm_reg_single_accuracy()
+    run_knn_class_final_accuracy()
+    run_mlp_class_final_accuracy()
+    run_svm_class_final_accuracy()
+    run_knn_class_single_accuracy()
+    run_mlp_class_single_accuracy()
+    run_svm_class_single_accuracy()
 
     #run_knn_reg_multi_accuracy()
     #run_mlp_reg_multi_accuracy()
-    run_svm_reg_multi_accuracy()
+    #run_svm_reg_multi_accuracy()
 
     #code skeleton for plotting, not sure how to implement w/ k-fold tho
     #plot_confusion_matrix(knn_classifier, testing_X, y_actual)
