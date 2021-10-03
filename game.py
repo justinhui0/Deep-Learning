@@ -97,7 +97,6 @@ def loadBoard():
                 moves_sorted = [(x, best_moves[x]) for x in range(len(best_moves))]
 
                 moves_sorted.sort(key = lambda x: x[1], reverse=True) 
-                print(moves_sorted)
                 chosen_move = -1
                 for move in moves_sorted:
                     if ValidMove(board, move[0]):
@@ -109,14 +108,40 @@ def loadBoard():
                 print("computer placed on %d\n" % chosen_move)
                 
             elif(regressor == "linear"):
+                # Linear = main.SVM_reg_get_model(tictac_multi_X, tictac_multi_y)
+                # best_move = int(round((Linear.predict([board])[0])))
+                # board[chosen_move] = -1
+                # print("computer placed on %d\n" % chosen_move)
                 Linear = main.SVM_reg_get_model(tictac_multi_X, tictac_multi_y)
-                best_move = int(round((Linear.predict([board])[0])))
+                best_moves = (Linear.predict([board])[0])
+                moves_sorted = [(x, best_moves[x]) for x in range(len(best_moves))]
+
+                moves_sorted.sort(key = lambda x: x[1], reverse=True) 
+                print(moves_sorted)
+                chosen_move = -1
+                for move in moves_sorted:
+                    if ValidMove(board, move[0]):
+                        chosen_move = move[0]
+                        break
+                print(chosen_move)
                 board[chosen_move] = -1
                 print("computer placed on %d\n" % chosen_move)
             elif(regressor == "MLP"):
-                MLP = main.KNN_reg_get_model(tictac_multi_X, tictac_multi_y)
+                #MLP = main.MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 1e-5, (27,27,27), 5000)
+                best_moves = MLP.predict([board])[0]
+                moves_sorted = [(x, best_moves[x]) for x in range(len(best_moves))]
 
+                moves_sorted.sort(key = lambda x: x[1], reverse=True) 
+                chosen_move = -1
+                for move in moves_sorted:
+                    if ValidMove(board, move[0]):
+                        chosen_move = move[0]
+                        break
 
+                #set board
+                board[chosen_move] = -1
+                print("computer placed on %d\n" % chosen_move)
+                
             turn = "0"
 
         printboard(board)
@@ -130,9 +155,12 @@ def loadBoard():
 
 
 def play():
+
     board = [0, 0, 0, 0, 0, 0, 0, 0, 0]
     printboard(board)
     loadBoard()
 
 if __name__ == '__main__':
+    tictac_multi_X, tictac_multi_y = main.load_dataset('tictac_multi.txt')
+    MLP = main.MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 1e-5, (27,27,27), 5000)
     play()
