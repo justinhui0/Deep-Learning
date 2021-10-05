@@ -8,10 +8,9 @@ from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.svm import SVC
 from sklearn.pipeline import make_pipeline
-from sklearn.linear_model import LogisticRegression
 
-import warnings
-warnings.filterwarnings("ignore")
+# import warnings
+# warnings.filterwarnings("ignore")
 
 def load_dataset(name, is_tenth=False):
     data = np.loadtxt(name)
@@ -211,7 +210,7 @@ def run_knn_reg_multi_accuracy():
 
 #MLP
 def run_mlp_reg_multi_accuracy():
-    mlp_classifier = MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 1e-5, (9,9,9), 5000)
+    mlp_classifier = MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 1e-5, (27,27,27), 12000)
     acc_avg, _ = k_fold_validation(10, tictac_multi_X, tictac_multi_y, mlp_classifier,is_multi=True)
     print("Accuracy score for tictac_multi, MLP Regressor:\n%f" % acc_avg )
     print("-"*20)
@@ -247,7 +246,7 @@ if __name__ == '__main__':
     #printing Accuracy of classifiers when using 1/10 the amount of training data
     tictac_single_X, tictac_single_y = load_dataset('tictac_single.txt', True)
     tictac_final_X, tictac_final_y = load_dataset('tictac_final.txt', True)
-    print("\n-"*20 + "\n1/10 Sized datasets Classification results\n" + "-"*20)
+    print("\n" + "-"*20 + "\n1/10 Sized datasets Classification results\n" + "-"*20)
 
     run_knn_class_final_accuracy(False)
     run_mlp_class_final_accuracy(False)
