@@ -1,14 +1,6 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.model_selection import KFold
-from sklearn.metrics import accuracy_score, confusion_matrix, plot_confusion_matrix
-from sklearn.preprocessing import normalize, StandardScaler
-from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
-from sklearn.neural_network import MLPClassifier, MLPRegressor
-from sklearn.svm import SVC
-from sklearn.pipeline import make_pipeline
 import main
-import math
+import numpy as np
+
 #check if computer(2) or player(1) won
 def get_state(arr):
     #horizontals(3)
@@ -71,11 +63,24 @@ def loadBoard():
         turn = print("Error, please enter 0 or 1\n")       
         
     #determines which regresser to play against
-    regressor = input("Enter KNN or linear or MLP\n")
-    if regressor != "KNN" and regressor != "linear" and regressor != "MLP":
-        regressor = input("error, please enter KNN, linear or MLP\n")
+    regressor = input("Enter KNN or Linear or MLP\n")
+    if regressor != "KNN" and regressor != "Linear" and regressor != "MLP":
+        regressor = input("error, please enter KNN, Linear or MLP\n")
+
+    print("Loading model...")
+    
     #load data
     tictac_multi_X, tictac_multi_y = main.load_dataset('tictac_multi.txt')
+    if regressor == 'KNN':
+        model = main.KNN_reg_get_model(tictac_multi_X, tictac_multi_y)
+    elif regressor == 'MLP':
+        model = main.MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 1e-5, (27,27,27), 5000)
+    else:
+        thetas = []
+        for i in range(9):
+            yi = tictac_multi_y[:,i].T * 2
+            theta = np.linalg.inv(tictac_multi_X.T.dot(tictac_multi_X)).dot(tictac_multi_X.T).dot(yi)
+            thetas.append(theta)
 
     while not get_state(board):
         if turn == "0":
@@ -88,61 +93,27 @@ def loadBoard():
                 board[int(move)] = 1
                 turn = "1"
 
+        # get computers move
         elif turn == "1":
-            if(regressor == "KNN"):
-                #get model
-                KNN = main.KNN_reg_get_model(tictac_multi_X, tictac_multi_y)
-                #predict best move 
-                best_moves = KNN.predict([board])[0]
-                moves_sorted = [(x, best_moves[x]) for x in range(len(best_moves))]
+            if regressor != 'Linear':
+                best_moves = model.predict([board])[0]
+            else:
+                board_arr = np.asarray(board)
+                board_arr = np.reshape(board_arr, (-1, 9))
+                best_moves = [board_arr.dot(theta) for theta in thetas]
 
-                moves_sorted.sort(key = lambda x: x[1], reverse=True) 
-                chosen_move = -1
-                for move in moves_sorted:
-                    if ValidMove(board, move[0]):
-                        chosen_move = move[0]
-                        break
+            moves_sorted = [(x, best_moves[x]) for x in range(len(best_moves))]
 
-                #set board
-                board[chosen_move] = -1
-                print("computer placed on %d\n" % chosen_move)
-                
-            elif(regressor == "linear"):
-                # Linear = main.SVM_reg_get_model(tictac_multi_X, tictac_multi_y)
-                # best_move = int(round((Linear.predict([board])[0])))
-                # board[chosen_move] = -1
-                # print("computer placed on %d\n" % chosen_move)
-                Linear = main.SVM_reg_get_model(tictac_multi_X, tictac_multi_y)
-                best_moves = (Linear.predict([board])[0])
-                moves_sorted = [(x, best_moves[x]) for x in range(len(best_moves))]
+            moves_sorted.sort(key = lambda x: x[1], reverse=True) 
+            chosen_move = -1
+            for move in moves_sorted:
+                if ValidMove(board, move[0]):
+                    chosen_move = move[0]
+                    break
 
-                moves_sorted.sort(key = lambda x: x[1], reverse=True) 
-                print(moves_sorted)
-                chosen_move = -1
-                for move in moves_sorted:
-                    if ValidMove(board, move[0]):
-                        chosen_move = move[0]
-                        break
-                print(chosen_move)
-                board[chosen_move] = -1
-                print("computer placed on %d\n" % chosen_move)
-            elif(regressor == "MLP"):
-                #MLP = main.MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 1e-5, (27,27,27), 5000)
-                best_moves = MLP.predict([board])[0]
-                moves_sorted = [(x, best_moves[x]) for x in range(len(best_moves))]
-
-                moves_sorted.sort(key = lambda x: x[1], reverse=True) 
-                chosen_move = -1
-                for move in moves_sorted:
-                    if ValidMove(board, move[0]):
-                        chosen_move = move[0]
-                        break
-
-                #set board
-                board[chosen_move] = -1
-                print("computer placed on %d\n" % chosen_move)
-                
+            board[chosen_move] = -1
             turn = "0"
+            print("computer placed on %d\n" % chosen_move)
 
         printboard(board)
 
@@ -157,10 +128,10 @@ def loadBoard():
 def play():
 
     board = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    print("Enter corresponding number to enter piece in space.")
+    printboard(range(9))
     printboard(board)
     loadBoard()
 
 if __name__ == '__main__':
-    tictac_multi_X, tictac_multi_y = main.load_dataset('tictac_multi.txt')
-    MLP = main.MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 1e-5, (27,27,27), 5000)
     play()
