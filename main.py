@@ -14,16 +14,6 @@ from sklearn.preprocessing import MinMaxScaler
 import warnings
 warnings.filterwarnings("ignore")
 
-def load_dataset(name, is_tenth=False):
-    data = np.loadtxt(name)
-    #shuffled when read in
-    np.random.shuffle(data)
-    if is_tenth:
-        data = data[:int(len(data)*.1)]
-
-    X = data[:,:9]
-    y = data[:,9:]
-    return (X, y)
    
 
 def linear_k_fold(k, X, y):
@@ -102,32 +92,7 @@ def pltClassierMatrix(norm_conf_matrix, title):
             ax.text(i, j, str(c), va='center', ha='center')
     plt.show()
 
-# CLASSIFIERS
-def KNN_class_get_model(X, y, neighbors):
-    KNN = KNeighborsClassifier(n_neighbors=neighbors,leaf_size=1, p=1)
-    KNN.fit(X,y.ravel())
-    return KNN
 
-def MLP_class_get_model(X, y, alpha, hidden_layers, max_iter):
-    MLP = MLPClassifier(solver='lbfgs', alpha=alpha, hidden_layer_sizes=hidden_layers, random_state=1, max_iter=max_iter)
-    MLP.fit(X,y.ravel())
-    return MLP
-
-def SVM_class_get_model(X,y):
-    SVM = make_pipeline(StandardScaler(), SVC(random_state=0, tol = 1e-5))
-    SVM.fit(X,y.ravel())
-    return SVM
-
-# REGRESSORS
-def KNN_reg_get_model(X, y):
-    KNN = KNeighborsRegressor(n_neighbors=1)
-    KNN.fit(X, y)
-    return KNN
-
-def MLP_reg_get_model(X, y, alpha, hidden_layers, max_iter):
-    MLP = MLPRegressor(solver='lbfgs', alpha=alpha, activation = 'tanh', hidden_layer_sizes=hidden_layers, max_iter=max_iter)
-    MLP.fit(X,y)
-    return MLP
 
 
 #CLASSIFICATION
@@ -228,6 +193,45 @@ def run_svm_reg_multi_accuracy():
     print("Accuracy score for tictac_multi, SVM Regressor:\n%f" % acc_avg )
     print("-"*20)
 
+# CLASSIFIERS
+def KNN_class_get_model(X, y, neighbors):
+    KNN = KNeighborsClassifier(n_neighbors=neighbors,leaf_size=1, p=1)
+    KNN.fit(X,y.ravel())
+    return KNN
+
+def MLP_class_get_model(X, y, alpha, hidden_layers, max_iter):
+    MLP = MLPClassifier(solver='lbfgs', alpha=alpha, hidden_layer_sizes=hidden_layers, random_state=1, max_iter=max_iter)
+    MLP.fit(X,y.ravel())
+    return MLP
+
+def SVM_class_get_model(X,y):
+    SVM = make_pipeline(StandardScaler(), SVC(random_state=0, tol = 1e-5))
+    SVM.fit(X,y.ravel())
+    return SVM
+
+# REGRESSORS
+def KNN_reg_get_model(X, y):
+    KNN = KNeighborsRegressor(n_neighbors=1)
+    KNN.fit(X, y)
+    return KNN
+
+def MLP_reg_get_model(X, y, alpha, hidden_layers, max_iter):
+    MLP = MLPRegressor(solver='lbfgs', alpha=alpha, activation = 'tanh', hidden_layer_sizes=hidden_layers, max_iter=max_iter)
+    MLP.fit(X,y)
+    return MLP
+
+
+def load_dataset(name, is_tenth=False):
+    data = np.loadtxt(name)
+    #shuffled when read in
+    np.random.shuffle(data)
+    if is_tenth:
+        data = data[:int(len(data)*.1)]
+
+    X = data[:,:9]
+    y = data[:,9:]
+    return (X, y)
+
 if __name__ == '__main__':
     np.set_printoptions(linewidth=1000,precision=3)
 
@@ -249,7 +253,7 @@ if __name__ == '__main__':
     run_mlp_reg_multi_accuracy()
     run_svm_reg_multi_accuracy()
 
-    # #printing Accuracy of classifiers when using 1/10 the amount of training data
+    #printing Accuracy of classifiers when using 1/10 the amount of training data
     tictac_single_X, tictac_single_y = load_dataset('tictac_single.txt', True)
     tictac_final_X, tictac_final_y = load_dataset('tictac_final.txt', True)
     print("\n" + "-"*20 + "\n1/10 Sized datasets Classification results\n" + "-"*20)

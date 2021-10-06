@@ -76,6 +76,7 @@ def loadBoard():
     elif regressor == 'MLP':
         model = main.MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 1e-5, (27,27,27), 5000)
     else:
+        #generate thetas 
         thetas = []
         for i in range(9):
             yi = tictac_multi_y[:,i].T * 2
@@ -95,17 +96,20 @@ def loadBoard():
 
         # get computers move
         elif turn == "1":
+            #not linear
             if regressor != 'Linear':
                 best_moves = model.predict([board])[0]
+            #linear, creates array of best moves
             else:
                 board_arr = np.asarray(board)
                 board_arr = np.reshape(board_arr, (-1, 9))
                 best_moves = [board_arr.dot(theta) for theta in thetas]
-
+            #Tuple with index and prediction value, sorts array and selects the move with the best prediction value
             moves_sorted = [(x, best_moves[x]) for x in range(len(best_moves))]
 
             moves_sorted.sort(key = lambda x: x[1], reverse=True) 
             chosen_move = -1
+            #iterate through array until one of the moves is valid
             for move in moves_sorted:
                 if ValidMove(board, move[0]):
                     chosen_move = move[0]
