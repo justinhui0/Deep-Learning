@@ -8,9 +8,11 @@ from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.svm import SVC
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import MinMaxScaler
 
-# import warnings
-# warnings.filterwarnings("ignore")
+
+import warnings
+warnings.filterwarnings("ignore")
 
 def load_dataset(name, is_tenth=False):
     data = np.loadtxt(name)
@@ -57,6 +59,10 @@ def k_fold_validation(k, X, y, model, is_final=False, is_multi=False):
     for train_index, test_index in kf.split(X):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
+
+        scaler = MinMaxScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.fit_transform(X_test)
 
         if is_multi:
             model.fit(X_train,y_train)     
@@ -119,7 +125,7 @@ def KNN_reg_get_model(X, y):
     return KNN
 
 def MLP_reg_get_model(X, y, alpha, hidden_layers, max_iter):
-    MLP = MLPRegressor(solver='lbfgs', alpha=alpha, hidden_layer_sizes=hidden_layers, random_state=1, max_iter=max_iter)
+    MLP = MLPRegressor(solver='lbfgs', alpha=alpha, activation = 'tanh', hidden_layer_sizes=hidden_layers, max_iter=max_iter)
     MLP.fit(X,y)
     return MLP
 
@@ -176,7 +182,7 @@ def run_knn_class_single_accuracy(do_confusion=True):
 #MLP
 def run_mlp_class_single_accuracy(do_confusion=True):
     # Ref: https://users.auth.gr/~kehagiat/Research/GameTheory/12CombBiblio/TicTacToe.pdf
-    mlp_classifier = MLP_class_get_model(tictac_single_X, tictac_single_y, 1e-5, (27,27,27), 4000)
+    mlp_classifier = MLP_class_get_model(tictac_single_X, tictac_single_y, 1e-5, (27,27,27), 100)
     acc_avg, norm_conf_matrix = k_fold_validation(10, tictac_single_X, tictac_single_y, mlp_classifier)
     print("Accuracy score for tictac_single, MLP Classifier:\n%f" % acc_avg )
     if do_confusion:
@@ -210,7 +216,7 @@ def run_knn_reg_multi_accuracy():
 
 #MLP
 def run_mlp_reg_multi_accuracy():
-    mlp_classifier = MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 1e-5, (27,27,27), 12000)
+    mlp_classifier = MLP_reg_get_model(tictac_multi_X, tictac_multi_y, 0.0001, (243), 12000)
     acc_avg, _ = k_fold_validation(10, tictac_multi_X, tictac_multi_y, mlp_classifier,is_multi=True)
     print("Accuracy score for tictac_multi, MLP Regressor:\n%f" % acc_avg )
     print("-"*20)
@@ -231,19 +237,19 @@ if __name__ == '__main__':
     tictac_multi_X, tictac_multi_y = load_dataset('tictac_multi.txt')
     
     #printing Accuracy and Confusion matrixes (True) for Classifiers and the 2 datasets (final and single)
-    # run_knn_class_final_accuracy()
-    # run_mlp_class_final_accuracy()
-    # run_svm_class_final_accuracy()
-    # run_knn_class_single_accuracy()
-    # run_mlp_class_single_accuracy()
-    # run_svm_class_single_accuracy()
+    run_knn_class_final_accuracy()
+    run_mlp_class_final_accuracy()
+    run_svm_class_final_accuracy()
+    run_knn_class_single_accuracy()
+    run_mlp_class_single_accuracy()
+    run_svm_class_single_accuracy()
 
     #printing Accuracy of regessors on multi datasets
     run_knn_reg_multi_accuracy()
     run_mlp_reg_multi_accuracy()
     run_svm_reg_multi_accuracy()
 
-    #printing Accuracy of classifiers when using 1/10 the amount of training data
+    # #printing Accuracy of classifiers when using 1/10 the amount of training data
     tictac_single_X, tictac_single_y = load_dataset('tictac_single.txt', True)
     tictac_final_X, tictac_final_y = load_dataset('tictac_final.txt', True)
     print("\n" + "-"*20 + "\n1/10 Sized datasets Classification results\n" + "-"*20)
