@@ -1,4 +1,3 @@
-from albumentations import augmentations
 import torch
 import cv2
 import glob
@@ -6,58 +5,10 @@ import numpy as np
 import random
 import torch.nn as nn
 import albumentations as A
-import torch.nn.functional as F
+import models
+import torch.optim as optim
 
-class Conv(nn.Module):
-    def __init__(self):
-            super(Conv, self).init()
-            self.conv1 =  nn.Sequential(nn.Conv2d(1, 2, (128,128),stride = 2, padding = 1) , nn.Relu(),
-                                         nn.Conv2d(1, 2, (64,64),stride = 2, padding = 1) , nn.Relu(),
-                                         nn.Conv2d(1, 2, (32,32),stride = 2, padding = 1) , nn.Relu(),
-                                         nn.Conv2d(1, 2, (16,16),stride = 2, padding = 1 ), nn.Relu(),
-                                         nn.Conv2d(1, 2, (8,8),stride = 2, padding = 1) , nn.Relu(),
-                                         nn.Conv2d(1, 2, (4,4),stride = 2, padding = 1 ), nn.Relu(),
-                                         nn.Conv2d(1, 2, (2,2),stride = 2, padding = 1) , nn.Relu())
-
-    #add regressor to prdict a and b?
-    #nn.Linear(1, 2)
-    def forward(self, x):
-        x = self.conv1(x)
-        return x
-
-
-class ColorizedImageNN(nn.Module):
-    def __init__(self):
-        super(ColorizedImageNN,self).__intit__()
-        self.upsample = nn.Sequential(
-            nn.Conv2d(128,128,kernel_size=5,stride=1,padding=1),
-            nn.ReLU(),
-            nn.UpsamplingNearest2d(scale_factor=2),
-            nn.Conv2d(128,64,kernel_size=3,stride=1,padding=1),
-            nn.ReLU(),
-            nn.Conv2d(64,64,kernel_size=3,stride=1,padding=1),
-            nn.ReLU(),
-            nn.UpsamplingNearest2d(scale_factor=2),
-            nn.Conv2d(64,32,kernel_size=3,stride=1,padding=1),
-            nn.ReLU(),
-            nn.Conv2d(32,32,kernel_size=3,stride=1,padding=1),
-            nn.ReLU(),
-            nn.UpsamplingNearest2d(scale_factor=2),
-            nn.Conv2d(32,16,kernel_size=3,stride=1,padding=1),
-            nn.ReLU(),
-            nn.Conv2d(16,16,kernel_size=3,stride=1,padding=1),
-            nn.ReLU(),
-            nn.UpsamplingNearest2d(scale_factor=2),
-            nn.Conv2d(16,8,kernel_size=3,stride=1,padding=1),
-            nn.ReLU(),
-            nn.Conv2d(8,8,kernel_size=3,stride=1,padding=1),
-            nn.ReLU(),
-            nn.UpsamplingNearest2d(scale_factor=2),
-            nn.Conv2d(8,4,kernel_size=3,stride=1,padding=1),
-            nn.UpsamplingNearest2d(scale_factor=2)
-        )
-    #duces memory requirements (32-bit float)
-
+#reduces memory requirements (32-bit float)
 torch.set_default_tensor_type(torch.FloatTensor)
 
 def load_dataset():
@@ -105,20 +56,62 @@ def convert_images(faces_tensor):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
         converted_tensor[i] = torch.tensor(img)
         
+
     return converted_tensor
 
+#Prepare converted dataset for training
+def prepare_data(converted_tensor, count):
+    np_tens = converted_tensor.numpy()
+    trans_arr = np.transpose(np_tens,(0,3,1,2))
+    input_vals = trans_arr[:,0:1,:,:] / 100
+
+    a_vals = trans_arr[:,1,:,:]
+    b_vals = trans_arr[:,2,:,:]
+
+    a_avg = a_vals.mean(axis=tuple(range(1, a_vals.ndim)))
+    b_avg = b_vals.mean(axis=tuple(range(1, b_vals.ndim)))
+
+    output_arr = np.array(list(zip(a_avg,b_avg)))
+
+    input_tens = torch.tensor(input_vals).float()
+    output_tens = torch.tensor(output_arr).float()
+
+    input_batches = torch.split(input_tens, count)
+    output_batches = torch.split(output_tens, count)
+
+    return zip(input_batches,output_batches)
 
 #Regressor
-def chrominance_regressor(dataset):
-    #Scale L channel to [0,1] either 0 or 1?
-    for i in dataset:
-        dataset[i] = dataset[i]//100
-    criterion = nn.MSECriterion()
+def train_chrominance_reg(trainloader):
+    net = models.Chrominance_Regressor()
 
-    #7 modules, each with a spatial convolution layer + Relu activation function, sum all modules?
-    NN = Conv()
+    criterion = nn.MSELoss()
+    optimizer = torch.optim.Adam(net.parameters(), lr=0.01)
 
-    result = Conv(dataset)
+    for epoch in range(2):  # loop over the dataset multiple times
+
+        running_loss = 0.0
+        for i, data in enumerate(trainloader, 0):
+            # get the inputs; data is a list of [inputs, labels]
+            inputs, expected = data
+
+            # zero the parameter gradients
+            optimizer.zero_grad()
+
+            # forward + backward + optimize
+            outputs = net(inputs)
+            loss = criterion(outputs, expected)
+            loss.backward()
+            optimizer.step()
+
+            # print statistics
+            running_loss += loss.item()
+            if i % 2000 == 1999:    # print every 2000 mini-batches
+                print('[%d, %5d] loss: %.3f' %
+                    (epoch + 1, i + 1, running_loss / 2000))
+                running_loss = 0.0
+    
+    #torch.save(net.state_dict(), PATH)
 
     
 #Colorize the Image
@@ -141,14 +134,15 @@ def show_image(name, img):
 
 if __name__ == '__main__':
     dataset = load_dataset()
-    print(dataset)
-    show_image('Orig Dataset', dataset[0])
+    print(" --- Data Loaded ---")
 
     augmented_tensor = augment(dataset)
-    print(augmented_tensor)
-    show_image('Augmented Dataset', augmented_tensor[3])
+    print(" --- Data Augmented ---")
     
     converted_tensor = convert_images(augmented_tensor)
-    print(converted_tensor)
-    show_image('Converted Dataset', converted_tensor[3])
+    print(" --- Data Converted to LAB ---")
 
+    train_data = prepare_data(converted_tensor, 2)
+    print(" --- Data Prepared for Training ---")
+    train_chrominance_reg(train_data)
+    print(" --- Finished Training ---")
