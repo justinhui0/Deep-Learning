@@ -4,21 +4,20 @@ import torch.nn.functional as F
 
 
 # REF: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
-
-#torch.set_default_tensor_type(torch.FloatTensor)
-
 class Chrominance_Regressor(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 16, 5, stride = 1, padding = 2)
+        self.conv1 = nn.Conv2d(1, 32, 5, stride = 1, padding = 2)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(16, 16, 5, stride = 1, padding = 2)
-        self.conv3 = nn.Conv2d(16, 8, 3, stride = 1, padding = 1)
-        self.conv4 = nn.Conv2d(8, 8, 3, stride = 1, padding = 1)
+        self.conv2 = nn.Conv2d(32, 32, 5, stride = 1, padding = 2)
+        self.conv3 = nn.Conv2d(32, 16, 3, stride = 1, padding = 1)
+        self.conv4 = nn.Conv2d(16, 8, 3, stride = 1, padding = 1)
         self.conv5 = nn.Conv2d(8, 4, 3, stride = 1, padding = 1)
         self.fc1 = nn.Linear(4 * 4 * 4, 64)
-        self.fc2 = nn.Linear(64, 32)
-        self.fc3 = nn.Linear(32, 2)
+        self.fc2 = nn.Linear(64, 64)
+        self.fc3 = nn.Linear(64, 32)
+        self.fc4 = nn.Linear(32, 32)
+        self.fc5 = nn.Linear(32, 2)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -29,7 +28,9 @@ class Chrominance_Regressor(nn.Module):
         x = torch.flatten(x, 1) # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        x = F.relu(self.fc4(x))
+        x = self.fc5(x)
         return x
 
 

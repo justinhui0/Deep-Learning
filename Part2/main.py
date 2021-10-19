@@ -1,3 +1,4 @@
+from albumentations.augmentations.functional import transpose
 import torch
 import cv2
 import glob
@@ -21,8 +22,10 @@ def load_dataset():
 
     data_stack = np.stack(data, axis=0)
     faces_tensor = torch.tensor(data_stack)
+    train_tensor = faces_tensor[:round(0.9 * len(faces_tensor))]
+    test_tensor = faces_tensor[round(0.9 * len(faces_tensor)):]
 
-    return faces_tensor
+    return (train_tensor,test_tensor)
 
 #Augmentations 
 
@@ -60,7 +63,7 @@ def convert_images(faces_tensor):
     return converted_tensor
 
 #Prepare converted dataset for training
-def prepare_data(converted_tensor, count):
+def prepare_data(converted_tensor):
     np_tens = converted_tensor.numpy()
     trans_arr = np.transpose(np_tens,(0,3,1,2))
     input_vals = trans_arr[:,0:1,:,:] / 100
@@ -75,11 +78,13 @@ def prepare_data(converted_tensor, count):
 
     input_tens = torch.tensor(input_vals).float()
     output_tens = torch.tensor(output_arr).float()
+    return (input_tens,output_tens)
 
+def make_batches(input_tens, output_tens, count):
     input_batches = torch.split(input_tens, count)
     output_batches = torch.split(output_tens, count)
 
-    return zip(input_batches,output_batches)
+    return tuple(zip(input_batches,output_batches))
 
 #Regressor
 def train_chrominance_reg(trainloader):
@@ -88,8 +93,7 @@ def train_chrominance_reg(trainloader):
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=0.01)
 
-    for epoch in range(2):  # loop over the dataset multiple times
-
+    for epoch in range(8):  # loop over the dataset multiple times
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
@@ -106,12 +110,13 @@ def train_chrominance_reg(trainloader):
 
             # print statistics
             running_loss += loss.item()
-            if i % 2000 == 1999:    # print every 2000 mini-batches
+            if i % 135 == 134:    # print every 134 mini-batches
                 print('[%d, %5d] loss: %.3f' %
-                    (epoch + 1, i + 1, running_loss / 2000))
+                    (epoch + 1, i + 1, running_loss / 135))
                 running_loss = 0.0
     
-    #torch.save(net.state_dict(), PATH)
+    torch.save(net.state_dict(), "model")
+    return net
 
     
 #Colorize the Image
@@ -133,16 +138,34 @@ def show_image(name, img):
     cv2.waitKey(0)
 
 if __name__ == '__main__':
-    dataset = load_dataset()
+    TRAIN = True
+
+    train_data, test_data = load_dataset()
     print(" --- Data Loaded ---")
-
-    augmented_tensor = augment(dataset)
-    print(" --- Data Augmented ---")
     
-    converted_tensor = convert_images(augmented_tensor)
-    print(" --- Data Converted to LAB ---")
+    if TRAIN:
+        augmented_tensor = augment(train_data)
+        print(" --- Data Augmented ---")
+        
+        converted_tensor = convert_images(augmented_tensor)
+        print(" --- Data Converted to LAB ---")
 
-    train_data = prepare_data(converted_tensor, 2)
-    print(" --- Data Prepared for Training ---")
-    train_chrominance_reg(train_data)
-    print(" --- Finished Training ---")
+        prepared_tuple = prepare_data(converted_tensor)
+        training_batches = make_batches(*prepared_tuple, 10)
+        print(" --- Data Prepared for Training ---")
+        model = train_chrominance_reg(training_batches)
+        print(" --- Finished Training ---")
+    
+    else:
+        model = models.Chrominance_Regressor()
+        model.load_state_dict(torch.load("model"))
+        model.eval()
+
+    lab_data = convert_images(test_data)
+    input_tens, output_tens = prepare_data(lab_data)
+
+    results = model(input_tens)
+    for i,val in enumerate(zip(output_tens,results)):
+        print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0].detach().numpy(), val[1].detach().numpy()))
+    criterion = nn.MSELoss()
+    print(" --- Loss: %f ---" % (criterion(results,output_tens)))
