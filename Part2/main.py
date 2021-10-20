@@ -156,8 +156,9 @@ def get_model_path(extension):
         model_path = None
     return model_path
 
-def chrominance_regressor_main():
-    model_path = get_model_path("regmodel")
+def chrominance_regressor_main(model_path=""):
+    if model_path == "":
+        model_path = get_model_path("regmodel")
 
     train_data, test_data = load_dataset()
     print(" --- Data Loaded ---")
@@ -193,9 +194,10 @@ def chrominance_regressor_main():
     criterion = nn.MSELoss()
     print(" --- Test Loss: %f ---" % (criterion(results,output_tens)))
 
-def colorization_main():
-    model_path = get_model_path("colormodel")
-
+def colorization_main(model_path=""):
+    if model_path == "":
+        model_path = get_model_path("colormodel")
+    
     train_data, test_data = load_dataset()
     print(" --- Data Loaded ---")
     
@@ -234,6 +236,6 @@ if __name__ == '__main__':
     regressor = 1
     
     if regressor == 1:
-        chrominance_regressor_main()
+        chrominance_regressor_main(None)
     else:
         colorization_main()
