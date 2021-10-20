@@ -132,9 +132,9 @@ def show_image(img):
     cv2.waitKey(0)
 
 
-def main():
+def get_model_path(extension):
     # user input to select a saved model or specify if training a new model
-    model_names = glob.glob("*.model")
+    model_names = glob.glob("*." + extension)
     if len(model_names) == 0:
         train = True
     else:
@@ -143,20 +143,26 @@ def main():
             resp = input("Train new model? (y/n): ")
         train = resp == 'y'
     if not train:
+        print("Model Options:")
         for i, name in enumerate(model_names):
-            print("{}. {}".format(i+1, name))
+            print("\t{}. {}".format(i+1, name))
         resp = 0
         while resp < 1 or resp > len(model_names):
             resp_str = input("Enter which numbered model to evaluate: ")
             if resp_str.isnumeric():
                 resp = int(resp_str)
         model_path = model_names[resp - 1]
+    if train:
+        model_path = None
+    return model_path
 
+def chrominance_regressor_main():
+    model_path = get_model_path("regmodel")
 
     train_data, test_data = load_dataset()
     print(" --- Data Loaded ---")
     
-    if train:
+    if model_path is None:
         augmented_tensor = augment(train_data)
         print(" --- Data Augmented ---")
         
@@ -164,7 +170,7 @@ def main():
         print(" --- Data Converted to LAB ---")
 
         prepared_tuple = prepare_data(converted_tensor)
-        training_batches = make_batches(*prepared_tuple, models.MINIBATCH_SIZE)
+        training_batches = make_batches(*prepared_tuple, models.CHROMREG_MINIBATCH_SIZE)
         print(" --- Data Prepared for Training ---")
         
         model = models.train_chrominance_reg(training_batches)
@@ -183,9 +189,51 @@ def main():
     #compare expected and actual results of CNN performance on test data
     results = model(input_tens)
     for i,val in enumerate(zip(output_tens,results)):
-        print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0].detach().numpy(), val[1].detach().numpy()))
+        print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0].detach().numpy().round(4), val[1].detach().numpy().round(4)))
+    criterion = nn.MSELoss()
+    print(" --- Test Loss: %f ---" % (criterion(results,output_tens)))
+
+def colorization_main():
+    model_path = get_model_path("colormodel")
+
+    train_data, test_data = load_dataset()
+    print(" --- Data Loaded ---")
+    
+    if model_path is None:
+        augmented_tensor = augment(train_data)
+        print(" --- Data Augmented ---")
+        
+        converted_tensor = convert_images(augmented_tensor)
+        print(" --- Data Converted to LAB ---")
+
+        prepared_tuple = prepare_data(converted_tensor)
+        training_batches = make_batches(*prepared_tuple, models.CHROMREG_MINIBATCH_SIZE)
+        print(" --- Data Prepared for Training ---")
+        
+        model = models.train_chrominance_reg(training_batches)
+        print(" --- Finished Training ---")
+    
+    else:
+        #load selected model
+        model = models.Chrominance_Regressor()
+        model.load_state_dict(torch.load(model_path))
+        model.eval()
+
+    #convert and prepare test data
+    lab_data = convert_images(test_data)
+    input_tens, output_tens = prepare_data(lab_data)
+
+    #compare expected and actual results of CNN performance on test data
+    results = model(input_tens)
+    for i,val in enumerate(zip(output_tens,results)):
+        print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0].detach().numpy().round(4), val[1].detach().numpy().round(4)))
     criterion = nn.MSELoss()
     print(" --- Test Loss: %f ---" % (criterion(results,output_tens)))
 
 if __name__ == '__main__':
-    main()
+    regressor = 1
+    
+    if regressor == 1:
+        chrominance_regressor_main()
+    else:
+        colorization_main()
