@@ -14,8 +14,9 @@ torch.set_default_tensor_type(torch.FloatTensor)
 
 # defining the Dataset class
 class FaceImages(Dataset):
-    def __init__(self,train=True, augmentations=None):
+    def __init__(self,train=True, augmentations=None, is_regressor=True):
         self.train = train
+        self.is_regressor = is_regressor
 
         # retreive all face image files
         img_dir = "face_images/*.jpg"
@@ -52,17 +53,26 @@ class FaceImages(Dataset):
 
         a_vals = img[1,:,:] / 255
         b_vals = img[2,:,:] / 255
+        
+        if self.is_regressor:
+            a_avg = a_vals.mean()
+            b_avg = b_vals.mean()
 
-        a_avg = a_vals.mean()
-        b_avg = b_vals.mean()
+            #construct and return input and output tensors for training and testing
+            output_arr = np.array([a_avg,b_avg])
 
-        #construct and return input and output tensors for training and testing
-        output_arr = np.array([a_avg,b_avg])
+            input_tens = torch.tensor(input_vals).float()
+            output_tens = torch.tensor(output_arr).float()
 
-        input_tens = torch.tensor(input_vals).float()
-        output_tens = torch.tensor(output_arr).float()
+            return input_tens, output_tens
+        else:
+            #construct and return input and output tensors for training and testing
+            output_arr = np.array([a_vals,b_vals])
 
-        return input_tens, output_tens
+            input_tens = torch.tensor(input_vals).float()
+            output_tens = torch.tensor(output_arr).float()
+
+            return input_tens, output_tens
 
     def augment(self, augmentations):
         #iterate through provided tensor and apply the above augmentations yielding a tensor 10x as large as the input
@@ -84,8 +94,6 @@ class FaceImages(Dataset):
             converted_tensor[i] = torch.tensor(img)
         
         return converted_tensor
-
-
 
 
 
@@ -166,71 +174,93 @@ def chrominance_regressor_main(model_path=""):
     if model_path == "":
         model_path = get_model_path("regmodel")
 
-    dataset = FaceImages(train=True,augmentations=augmentations)
+    if model_path == None:
+        print(" --- Loading Data ---")
+        # implementing dataloader on the dataset and printing per batch
+        trainset = FaceImages(train=True,augmentations=augmentations)
+        trainloader = DataLoader(trainset, batch_size=models.CHROMREG_MINIBATCH_SIZE, shuffle=True)
 
-
-    # implementing dataloader on the dataset and printing per batch
-    dataloader = DataLoader(dataset, batch_size=models.CHROMREG_MINIBATCH_SIZE, shuffle=True)
-
-
-    model = models.train_chrominance_reg(dataloader)
-    print(" --- Finished Training ---")
-    
-    # else:
-    #     #load selected model
-    #     model = models.Chrominance_Regressor()
-    #     model.load_state_dict(torch.load(model_path))
-    #     model.eval()
-
-    test_dataset = FaceImages(train=False)
-
-    #compare expected and actual results of CNN performance on test data
-    results = model(test_dataset)
-    for i,val in enumerate(zip(output_tens,results)):
-        print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0].detach().numpy().round(4), val[1].detach().numpy().round(4)))
-    criterion = nn.MSELoss()
-    print(" --- Test Loss: %f ---" % (criterion(results,output_tens)))
-
-def colorization_main(model_path=""):
-    if model_path == "":
-        model_path = get_model_path("colormodel")
-    
-    train_data, test_data = load_dataset()
-    print(" --- Data Loaded ---")
-    
-    if model_path is None:
-        augmented_tensor = augment(train_data)
-        print(" --- Data Augmented ---")
-        
-        converted_tensor = convert_images(augmented_tensor)
-        print(" --- Data Converted to LAB ---")
-
-        prepared_tuple = prepare_data(converted_tensor)
-        training_batches = make_batches(*prepared_tuple, models.CHROMREG_MINIBATCH_SIZE)
-        print(" --- Data Prepared for Training ---")
-        
-        model = models.train_chrominance_reg(training_batches)
+        print(" --- Finished Loading Data, Training model ---")
+        model = models.train_chrominance_reg(trainloader)
         print(" --- Finished Training ---")
     
     else:
         #load selected model
         model = models.Chrominance_Regressor()
         model.load_state_dict(torch.load(model_path))
-        model.eval()
+    
+    model.eval()
 
-    #convert and prepare test data
-    lab_data = convert_images(test_data)
-    input_tens, output_tens = prepare_data(lab_data)
+    testset = FaceImages(train=False)
+    testloader = DataLoader(testset, batch_size=models.CHROMREG_MINIBATCH_SIZE, shuffle=False)
+    
+    total_loss = 0
+    count = 0
+    for i,data in enumerate(testloader):
+        images, outputs = data
 
-    #compare expected and actual results of CNN performance on test data
-    results = model(input_tens)
-    for i,val in enumerate(zip(output_tens,results)):
-        print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0].detach().numpy().round(4), val[1].detach().numpy().round(4)))
-    criterion = nn.MSELoss()
-    print(" --- Test Loss: %f ---" % (criterion(results,output_tens)))
+        #compare expected and actual results of CNN performance on test data
+        results = model(images)
+        results = np.multiply(results.detach().numpy(), 255)
+        outputs = np.multiply(outputs.numpy(), 255)
+        for i,val in enumerate(zip(outputs,results)):
+            print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0], val[1]))
+        criterion = nn.MSELoss()
+        loss = criterion(torch.tensor(outputs),torch.tensor(results))
+        print(" --- Test Batch #%d Loss: %f ---" % (i+1, loss))
+        total_loss += loss
+        count += 1
+
+    print("\n --- Average MSE Loss: %f" % (total_loss / count))
+
+    
+def colorization_main(model_path=""):
+    if model_path == "":
+        model_path = get_model_path("colormodel")
+
+    if model_path == None:
+        print(" --- Loading Data ---")
+        # implementing dataloader on the dataset and printing per batch
+        trainset = FaceImages(train=True, augmentations=augmentations, is_regressor=False)
+        trainloader = DataLoader(trainset, batch_size=models.COLORIZE_MINIBATCH_SIZE, shuffle=True)
+
+        print(" --- Finished Loading Data, Training model ---")
+        model = models.train_colorizer(trainloader)
+        print(" --- Finished Training ---")
+    
+    else:
+        #load selected model
+        model = models.ColorizationNet()
+        model.load_state_dict(torch.load(model_path))
+    
+    model.eval()
+
+    testset = FaceImages(train=False, is_regressor=False)
+    testloader = DataLoader(testset, batch_size=models.COLORIZE_MINIBATCH_SIZE, shuffle=False)
+    
+    total_loss = 0
+    count = 0
+    for i,data in enumerate(testloader):
+        images, outputs = data
+
+        #compare expected and actual results of CNN performance on test data
+        results = model(images)
+
+        #TODO broken for now
+        results = np.multiply(results.detach().numpy(), 255)
+        outputs = np.multiply(outputs.numpy(), 255)
+        for i,val in enumerate(zip(outputs,results)):
+            print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0], val[1]))
+        criterion = nn.MSELoss()
+        loss = criterion(torch.tensor(outputs),torch.tensor(results))
+        print(" --- Test Batch #%d Loss: %f ---" % (i+1, loss))
+        total_loss += loss
+        count += 1
+
+    print("\n --- Average MSE Loss: %f" % (total_loss / count))
 
 if __name__ == '__main__':
-    regressor = 1
+    regressor = 0
     
     if regressor == 1:
         chrominance_regressor_main()

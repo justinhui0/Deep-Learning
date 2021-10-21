@@ -2,8 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from datetime import datetime
+import numpy as np
+import cv2
 
-CHROMREG_MINIBATCH_SIZE = 5
+CHROMREG_MINIBATCH_SIZE = 10
+COLORIZE_MINIBATCH_SIZE = 10
 
 #TODO: make this regressor work well. currently suffering from high loss and for some reason the two outputs are almost always basically the same number
 # REF: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -11,20 +14,18 @@ class Chrominance_Regressor(nn.Module):
     def __init__(self):
         super().__init__()
         # implementation of convolution downsampling and FC layers for regression output
-        self.conv1 = nn.Conv2d(1, 64, 5, stride = 1, padding = 2)
+        self.conv1 = nn.Conv2d(1, 128, 5, stride = 1, padding = 2)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(64, 64, 5, stride = 1, padding = 2)
-        self.conv3 = nn.Conv2d(64, 32, 3, stride = 1, padding = 1)
-        self.conv4 = nn.Conv2d(32, 16, 3, stride = 1, padding = 1)
-        self.conv5 = nn.Conv2d(16, 8, 3, stride = 1, padding = 1)
-        self.conv6 = nn.Conv2d(8, 8, 3, stride = 1, padding = 1)
-        self.fc1 = nn.Linear(4 * 4 * 8, 128)
-        self.fc2 = nn.Linear(128, 64)
+        self.conv2 = nn.Conv2d(128, 128, 5, stride = 1, padding = 2)
+        self.conv3 = nn.Conv2d(128, 64, 3, stride = 1, padding = 1)
+        self.conv4 = nn.Conv2d(64, 32, 3, stride = 1, padding = 1)
+        self.conv5 = nn.Conv2d(32, 16, 3, stride = 1, padding = 1)
+        self.fc1 = nn.Linear(4 * 4 * 16, 256)
+        self.fc2 = nn.Linear(256, 64)
         self.fc3 = nn.Linear(64, 32)
-        self.fc4 = nn.Linear(32, 32)
-        self.fc5 = nn.Linear(32, 16)
-        self.fc6 = nn.Linear(16, 4)
-        self.fc7 = nn.Linear(4, 2)
+        self.fc4 = nn.Linear(32, 8)
+        self.fc5 = nn.Linear(8, 4)
+        self.fc6 = nn.Linear(4, 2)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -32,21 +33,19 @@ class Chrominance_Regressor(nn.Module):
         x = self.pool(F.relu(self.conv3(x)))
         x = self.pool(F.relu(self.conv4(x)))
         x = self.pool(F.relu(self.conv5(x)))
-        x = F.relu(self.conv6(x))
         x = torch.flatten(x, 1) # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         x = F.relu(self.fc4(x))
         x = F.relu(self.fc5(x))
-        x = F.relu(self.fc6(x))
-        x = self.fc7(x)
+        x = self.fc6(x)
         return x
 
 #Regressor
 def train_chrominance_reg(trainloader):
-    EPOCH_COUNT = 16
-    LEARNING_RATE = 0.0004
+    EPOCH_COUNT = 2
+    LEARNING_RATE = 0.002
 
     net = Chrominance_Regressor()
 
@@ -84,47 +83,68 @@ def train_chrominance_reg(trainloader):
     return net
 
 
-# TODO: actually make this model and training algorithm - currently basically just a copy of the regressor
-class ColorizationNetwork(nn.Module):
-    def __init__(self):
-        super().__init__()
-        # implementation of convolution downsampling and FC layers for regression output
-        self.conv1 = nn.Conv2d(1, 32, 5, stride = 1, padding = 2)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(32, 32, 3, stride = 1, padding = 1)
-        self.conv3 = nn.Conv2d(32, 16, 3, stride = 1, padding = 1)
-        self.conv4 = nn.Conv2d(16, 8, 3, stride = 1, padding = 1)
-        self.conv5 = nn.Conv2d(8, 4, 3, stride = 1, padding = 1)
-        self.fc1 = nn.Linear(4 * 4 * 4, 32)
-        self.fc2 = nn.Linear(32, 32)
-        self.fc3 = nn.Linear(32, 16)
-        self.fc4 = nn.Linear(16, 12)
-        self.fc5 = nn.Linear(12, 2)
+class ColorizationNet(nn.Module):
+    def __init__(self, input_size=128):
+        super(ColorizationNet, self).__init__()
+        
+        self.upsample = nn.Sequential(    
+            #convtranpse2d inverse of conv2d, upsample inverse of pooling
+            nn.Conv2d(1, 32, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(32, 64, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(64, 128, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(128, 256, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(256, 512, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
 
-    def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
-        x = self.pool(F.relu(self.conv4(x)))
-        x = self.pool(F.relu(self.conv5(x)))
-        x = torch.flatten(x, 1) # flatten all dimensions except batch
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = F.relu(self.fc4(x))
-        x = self.fc5(x)
-        return x
+            nn.ConvTranspose2d(512, 256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2),
+            nn.ConvTranspose2d(256, 128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2),
+            nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2),
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.Upsample(scale_factor=2),
+            nn.ConvTranspose2d(32, 2, kernel_size=3, stride=1, padding=1),
+            nn.Upsample(scale_factor=2)
+        )
+    def forward(self, input):
+        # Upsample to get colors
+        output = self.upsample(input)
+        return output
+
 
 def train_colorizer(trainloader):
-    EPOCH_COUNT = 16
-    LEARNING_RATE = 0.005
+    EPOCH_COUNT = 10
+    LEARNING_RATE = 0.002
 
-    net = Chrominance_Regressor()
+    net = ColorizationNet()
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=LEARNING_RATE)
 
-    statistics_count = 7500 / (CHROMREG_MINIBATCH_SIZE * 5)
+    statistics_count = int(6750 / (COLORIZE_MINIBATCH_SIZE * 20))
     for epoch in range(EPOCH_COUNT):  # loop over the dataset multiple times
         net.train()
         running_loss = 0.0
@@ -140,14 +160,15 @@ def train_colorizer(trainloader):
             loss = criterion(outputs, expected)
             loss.backward()
             optimizer.step()
-
+            
             # print statistics
             running_loss += loss.item()
             if i % statistics_count == (statistics_count - 1):    # print 5 times per epoch
                 print('[%d, %5d] loss: %.5f' %
                     (epoch + 1, i + 1, running_loss / statistics_count * 100))
-                running_loss = 0.0
-    
+                running_loss = 0
+                write_img(inputs[0],outputs[0].detach())
+                
     #save the model with time based name to prevent model overwrite
     now = datetime.now()
     model_path = now.strftime("part2_%m-%d_%H.%M.colormodel")
@@ -155,75 +176,12 @@ def train_colorizer(trainloader):
     return net
 
 
-
-# import torch.nn.functional as F
-
-# class Conv(nn.Module):
-#     def __init__(self):
-#             super(Conv, self).init()
-#             self.conv1 =  nn.Sequential(nn.Conv2d(1, 2, (128,128),stride = 2, padding = 1) , nn.Relu(),
-#                                          nn.Conv2d(1, 2, (64,64),stride = 2, padding = 1) , nn.Relu(),
-#                                          nn.Conv2d(1, 2, (32,32),stride = 2, padding = 1) , nn.Relu(),
-#                                          nn.Conv2d(1, 2, (16,16),stride = 2, padding = 1 ), nn.Relu(),
-#                                          nn.Conv2d(1, 2, (8,8),stride = 2, padding = 1) , nn.Relu(),
-#                                          nn.Conv2d(1, 2, (4,4),stride = 2, padding = 1 ), nn.Relu(),
-#                                          nn.Conv2d(1, 2, (2,2),stride = 2, padding = 1) , nn.Relu())
-
-#     #add regressor to prdict a and b?
-#     #nn.Linear(1, 2)
-#     def forward(self, x):
-#         x = self.conv1(x)
-#         return x
-
-# from keras.models import Sequential
-# from keras.layers import Dense, Conv2D, Flatten
-# #create model
-# model = Sequential()
-# #add model layers
-# model.add(Conv2D(64, kernel_size=3, activation='relu', input_shape=(128,128,1), data_format="channels_last"))
-# model.add(Conv2D(32, kernel_size=3, activation='relu'))
-# model.add(Flatten())
-# model.add(Dense(10, activation='linear'))
-
-
-# class ColorizedImageNN(nn.Module):
-#     def __init__(self):
-#         super(ColorizedImageNN,self).__intit__()
-#         self.upsample = nn.Sequential(
-#             nn.Conv2d(128,128,kernel_size=5,stride=1,padding=1),
-#             nn.ReLU(),
-#             nn.UpsamplingNearest2d(scale_factor=2),
-#             nn.Conv2d(128,64,kernel_size=3,stride=1,padding=1),
-#             nn.ReLU(),
-#             nn.Conv2d(64,64,kernel_size=3,stride=1,padding=1),
-#             nn.ReLU(),
-#             nn.UpsamplingNearest2d(scale_factor=2),
-#             nn.Conv2d(64,32,kernel_size=3,stride=1,padding=1),
-#             nn.ReLU(),
-#             nn.Conv2d(32,32,kernel_size=3,stride=1,padding=1),
-#             nn.ReLU(),
-#             nn.UpsamplingNearest2d(scale_factor=2),
-#             nn.Conv2d(32,16,kernel_size=3,stride=1,padding=1),
-#             nn.ReLU(),
-#             nn.Conv2d(16,16,kernel_size=3,stride=1,padding=1),
-#             nn.ReLU(),
-#             nn.UpsamplingNearest2d(scale_factor=2),
-#             nn.Conv2d(16,8,kernel_size=3,stride=1,padding=1),
-#             nn.ReLU(),
-#             nn.Conv2d(8,8,kernel_size=3,stride=1,padding=1),
-#             nn.ReLU(),
-#             nn.UpsamplingNearest2d(scale_factor=2),
-#             nn.Conv2d(8,4,kernel_size=3,stride=1,padding=1),
-#             nn.UpsamplingNearest2d(scale_factor=2)
-#         )
-
-# def chrominance_regressor(dataset):
-#     #Scale L channel to [0,1] either 0 or 1?
-#     for i in dataset:
-#         dataset[i] = dataset[i]//100
-#     criterion = nn.MSECriterion()
-
-#     #7 modules, each with a spatial convolution layer + Relu activation function, sum all modules?
-#     NN = Conv()
-
-#     result = Conv(dataset)
+def write_img(l, ab):
+    color_image = torch.cat((l*255, ab*255), 0).numpy()
+    color_image = color_image.transpose((1, 2, 0))
+    color_image = color_image.round()
+    color_image = np.clip(color_image,0,255)
+    color_image = cv2.cvtColor(color_image, cv2.COLOR_Lab2BGR) * 255
+    cv2.imwrite('test.png',color_image)
+    print(color_image)
+    print(" --- Image written ---")
