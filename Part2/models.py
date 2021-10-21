@@ -138,7 +138,7 @@ class ColorizationNet(nn.Module):
 
 
 def train_colorizer(trainloader):
-    EPOCH_COUNT = 16
+    EPOCH_COUNT = 10
     LEARNING_RATE = 0.002
 
     net = ColorizationNet()
@@ -152,7 +152,7 @@ def train_colorizer(trainloader):
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
-            inputs, expected, original = data
+            inputs, expected = data
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -169,7 +169,7 @@ def train_colorizer(trainloader):
                 print('[%d, %5d] loss: %.5f' %
                     (epoch + 1, i + 1, running_loss / statistics_count * 255))
                 running_loss = 0
-                write_img(inputs[0],outputs[0].detach() , original[0])
+                write_img("test.png",inputs[0],outputs[0].detach() , expected[0])
                 
     #save the model with time based name to prevent model overwrite
     now = datetime.now()
@@ -177,7 +177,7 @@ def train_colorizer(trainloader):
     torch.save(net.state_dict(), model_path)
     return net
 
-def write_img(l, ab, original):
+def write_img(name, l, ab, expected):
     color_image = torch.cat((l*255, ab*255), 0).numpy()
     color_image = color_image.transpose((1, 2, 0))
     color_image = color_image.round()
@@ -185,7 +185,7 @@ def write_img(l, ab, original):
     color_image = np.uint8(color_image)
     color_image = cv2.cvtColor(color_image, cv2.COLOR_LAB2BGR)
 
-    original = original.numpy()
+    original = torch.cat((l*255, expected*255), 0).numpy()
     original = np.transpose(original,(1,2,0))
     original = np.uint8(original)
     original = cv2.cvtColor(original,  cv2.COLOR_LAB2BGR)
@@ -197,4 +197,4 @@ def write_img(l, ab, original):
     gray_image = np.uint8(gray_image)
 
     combined_image = np.concatenate((original, gray_image, color_image), 1)
-    cv2.imwrite('test.png',combined_image)
+    cv2.imwrite(name,combined_image)

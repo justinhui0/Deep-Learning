@@ -61,12 +61,8 @@ class FaceImages(Dataset):
 
         input_tens = torch.tensor(input_vals).float()
         output_tens = torch.tensor(output_arr).float()
-        original = torch.tensor(img)
-        
-        
 
-
-        return input_tens, output_tens, original
+        return input_tens, output_tens
 
     def augment(self, augmentations):
         #iterate through provided tensor and apply the above augmentations yielding a tensor 10x as large as the input
@@ -236,18 +232,20 @@ def colorization_main(model_path=""):
     total_loss = 0
     count = 0
     for i,data in enumerate(testloader):
-        images, outputs = data
+        inputs, expected = data
 
         #compare expected and actual results of CNN performance on test data
-        results = model(images)
+        results = model(inputs)
+        results = results.detach()
 
-        #TODO broken for now
-        results = np.multiply(results.detach().numpy(), 255)
-        outputs = np.multiply(outputs.numpy(), 255)
-        for i,val in enumerate(zip(outputs,results)):
-            print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0], val[1]))
+        for j,val in enumerate(zip(inputs, expected, results)):
+            print(j+1)
+            fname = "test_image_results/img{0:03d}-{1:03d}.png".format(i+1, j+1)
+            models.write_img(fname, val[0] , val[1], val[2])
+            print(" --- Wrote image to '{}'".format(fname))
+
         criterion = nn.MSELoss()
-        loss = criterion(torch.tensor(outputs),torch.tensor(results))
+        loss = criterion(torch.tensor(expected),torch.tensor(results)) * 255
         print(" --- Test Batch #%d Loss: %f ---" % (i+1, loss))
         total_loss += loss
         count += 1
