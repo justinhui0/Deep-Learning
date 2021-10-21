@@ -85,7 +85,7 @@ def train_chrominance_reg(trainloader):
 
 
 class ColorizationNet(nn.Module):
-    def __init__(self, input_size=128):
+    def __init__(self):
         super(ColorizationNet, self).__init__()
         
         self.upsample = nn.Sequential(    
@@ -192,4 +192,3 @@ def write_img(l, ab, original):
     
     combined_image = np.concatenate((original, color_image), 1)
     cv2.imwrite('test.png',combined_image)
-    print(" --- Image written ---")
