@@ -49,8 +49,6 @@ class FaceImages(Dataset):
         img = np.transpose(img,(2,0,1))
         
         input_vals = img[0:1,:,:] / 255
-
-
         a_vals = img[1,:,:] / 255
         b_vals = img[2,:,:] / 255
         
@@ -64,13 +62,18 @@ class FaceImages(Dataset):
         input_tens = torch.tensor(input_vals).float()
         output_tens = torch.tensor(output_arr).float()
         original = torch.tensor(img)
-        original = torch.div(original, 1)
+        
+        
+
+
         return input_tens, output_tens, original
 
     def augment(self, augmentations):
         #iterate through provided tensor and apply the above augmentations yielding a tensor 10x as large as the input
-        augmented_arr = np.zeros((7500,128,128,3), int)
         faces_arr = self.data.numpy()
+        new_shape = list(faces_arr.shape)
+        new_shape[0] *= 10
+        augmented_arr = np.zeros(new_shape, int)
         for i,img in enumerate(faces_arr):
             for j, augment in enumerate(augmentations):
                 augmented_arr[i*10 + j] = augment(img)
@@ -93,10 +96,8 @@ class FaceImages(Dataset):
 
 
 #Augmentations 
-def random_crop(img):
-    # scale factor indicating percentile range of each side that will remain
-    scaling_range = (0.35, 0.99)
-
+def random_crop(img, scaling_range):
+    # scaling_range = scale factor indicating percentile range of each side that will remain
     #crop image in random position according to selected percentile and rescale to original size
     new_size = round(random.uniform(*scaling_range) * img.shape[0])
     new_x = random.randint(0, img.shape[0] - new_size - 1)
@@ -112,21 +113,22 @@ def flip_horiz(img):
     return np.flip(img, 1)
 
 def scale_rgb(img):
-    scale_val = random.uniform(0.6,1)
+    scale_val = random.uniform(0.6,0.99)
     return np.multiply(img, scale_val).round()
 
 # TODO: add more
 augmentations = [
     lambda x: x,
-    lambda x: random_crop(x),
+    lambda x: random_crop(x, (0.65, 0.9)),
     lambda x: flip_horiz(x),
     lambda x: scale_rgb(x),
-    lambda x: scale_rgb(flip_horiz(x)),
-    lambda x: random_crop(x),
-    lambda x: flip_horiz(random_crop(x)),
-    lambda x: flip_horiz(random_crop(scale_rgb(x))),
-    lambda x: random_crop(flip_horiz(x)),
-    lambda x: scale_rgb(random_crop(flip_horiz(x)))
+    lambda x: flip_horiz(random_crop(x, (0.65, 0.9))),
+    lambda x: flip_horiz(scale_rgb(x)),
+    lambda x: scale_rgb(random_crop(x, (0.65, 0.9))),
+    lambda x: flip_horiz(random_crop(scale_rgb(x), (0.65, 0.9))),
+    
+    lambda x: flip_horiz(random_crop(x, (0.3, 0.7))),
+    lambda x: scale_rgb(random_crop(x, (0.3, 0.7))),
 ]
 
 #display an inputted image

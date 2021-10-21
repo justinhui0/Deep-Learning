@@ -7,7 +7,7 @@ import numpy as np
 import cv2
 
 CHROMREG_MINIBATCH_SIZE = 10
-COLORIZE_MINIBATCH_SIZE = 10
+COLORIZE_MINIBATCH_SIZE = 8
 
 #TODO: make this regressor work well. currently suffering from high loss and for some reason the two outputs are almost always basically the same number
 # REF: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -138,15 +138,15 @@ class ColorizationNet(nn.Module):
 
 
 def train_colorizer(trainloader):
-    EPOCH_COUNT = 32
-    LEARNING_RATE = 0.001
+    EPOCH_COUNT = 16
+    LEARNING_RATE = 0.002
 
     net = ColorizationNet()
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=LEARNING_RATE)
 
-    statistics_count = int(6750 / (COLORIZE_MINIBATCH_SIZE * 10))
+    statistics_count = int(6750 / (COLORIZE_MINIBATCH_SIZE * 6))
     for epoch in range(EPOCH_COUNT):  # loop over the dataset multiple times
         net.train()
         running_loss = 0.0
@@ -177,8 +177,6 @@ def train_colorizer(trainloader):
     torch.save(net.state_dict(), model_path)
     return net
 
-
-from main import show_image
 def write_img(l, ab, original):
     color_image = torch.cat((l*255, ab*255), 0).numpy()
     color_image = color_image.transpose((1, 2, 0))
@@ -192,6 +190,6 @@ def write_img(l, ab, original):
     original = np.uint8(original)
     original = cv2.cvtColor(original,  cv2.COLOR_LAB2BGR)
     
-    combined_image = np.concatenate((color_image,original), 1)
+    combined_image = np.concatenate((original, color_image), 1)
     cv2.imwrite('test.png',combined_image)
     print(" --- Image written ---")
