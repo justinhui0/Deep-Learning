@@ -57,22 +57,15 @@ class FaceImages(Dataset):
         if self.is_regressor:
             a_avg = a_vals.mean()
             b_avg = b_vals.mean()
-
-            #construct and return input and output tensors for training and testing
             output_arr = np.array([a_avg,b_avg])
-
-            input_tens = torch.tensor(input_vals).float()
-            output_tens = torch.tensor(output_arr).float()
-
-            return input_tens, output_tens
         else:
-            #construct and return input and output tensors for training and testing
             output_arr = np.array([a_vals,b_vals])
 
-            input_tens = torch.tensor(input_vals).float()
-            output_tens = torch.tensor(output_arr).float()
-
-            return input_tens, output_tens
+        input_tens = torch.tensor(input_vals).float()
+        output_tens = torch.tensor(output_arr).float()
+        original = torch.tensor(img)
+        original = torch.div(original, 1)
+        return input_tens, output_tens, original
 
     def augment(self, augmentations):
         #iterate through provided tensor and apply the above augmentations yielding a tensor 10x as large as the input
@@ -92,6 +85,8 @@ class FaceImages(Dataset):
             img = img.numpy()
             img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
             converted_tensor[i] = torch.tensor(img)
+
+
         
         return converted_tensor
 
@@ -100,7 +95,7 @@ class FaceImages(Dataset):
 #Augmentations 
 def random_crop(img):
     # scale factor indicating percentile range of each side that will remain
-    scaling_range = (0.45, 0.95)
+    scaling_range = (0.35, 0.99)
 
     #crop image in random position according to selected percentile and rescale to original size
     new_size = round(random.uniform(*scaling_range) * img.shape[0])
@@ -113,9 +108,6 @@ def random_crop(img):
 
     return resized_img
 
-def flip_vert(img):
-    return np.flip(img, 0)
-
 def flip_horiz(img):
     return np.flip(img, 1)
 
@@ -123,17 +115,18 @@ def scale_rgb(img):
     scale_val = random.uniform(0.6,1)
     return np.multiply(img, scale_val).round()
 
+# TODO: add more
 augmentations = [
     lambda x: x,
     lambda x: random_crop(x),
-    lambda x: scale_rgb(flip_vert(x)),
-    lambda x: scale_rgb(flip_horiz(x)),
+    lambda x: flip_horiz(x),
     lambda x: scale_rgb(x),
-    lambda x: flip_vert(random_crop(x)),
+    lambda x: scale_rgb(flip_horiz(x)),
+    lambda x: random_crop(x),
     lambda x: flip_horiz(random_crop(x)),
-    lambda x: random_crop(flip_vert(flip_horiz(x))),
-    lambda x: scale_rgb(flip_vert(flip_horiz(x))),
-    lambda x: scale_rgb(random_crop(flip_vert(flip_horiz(x))))
+    lambda x: flip_horiz(random_crop(scale_rgb(x))),
+    lambda x: random_crop(flip_horiz(x)),
+    lambda x: scale_rgb(random_crop(flip_horiz(x)))
 ]
 
 #display an inputted image

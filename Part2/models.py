@@ -1,3 +1,4 @@
+from numpy.__config__ import show
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -127,6 +128,7 @@ class ColorizationNet(nn.Module):
             nn.ReLU(),
             nn.Upsample(scale_factor=2),
             nn.ConvTranspose2d(32, 2, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
             nn.Upsample(scale_factor=2)
         )
     def forward(self, input):
@@ -136,21 +138,21 @@ class ColorizationNet(nn.Module):
 
 
 def train_colorizer(trainloader):
-    EPOCH_COUNT = 10
-    LEARNING_RATE = 0.002
+    EPOCH_COUNT = 32
+    LEARNING_RATE = 0.001
 
     net = ColorizationNet()
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=LEARNING_RATE)
 
-    statistics_count = int(6750 / (COLORIZE_MINIBATCH_SIZE * 20))
+    statistics_count = int(6750 / (COLORIZE_MINIBATCH_SIZE * 10))
     for epoch in range(EPOCH_COUNT):  # loop over the dataset multiple times
         net.train()
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
-            inputs, expected = data
+            inputs, expected, original = data
 
             # zero the parameter gradients
             optimizer.zero_grad()
@@ -165,9 +167,9 @@ def train_colorizer(trainloader):
             running_loss += loss.item()
             if i % statistics_count == (statistics_count - 1):    # print 5 times per epoch
                 print('[%d, %5d] loss: %.5f' %
-                    (epoch + 1, i + 1, running_loss / statistics_count * 100))
+                    (epoch + 1, i + 1, running_loss / statistics_count * 255))
                 running_loss = 0
-                write_img(inputs[0],outputs[0].detach())
+                write_img(inputs[0],outputs[0].detach() , original[0])
                 
     #save the model with time based name to prevent model overwrite
     now = datetime.now()
@@ -176,12 +178,20 @@ def train_colorizer(trainloader):
     return net
 
 
-def write_img(l, ab):
+from main import show_image
+def write_img(l, ab, original):
     color_image = torch.cat((l*255, ab*255), 0).numpy()
     color_image = color_image.transpose((1, 2, 0))
     color_image = color_image.round()
     color_image = np.clip(color_image,0,255)
-    color_image = cv2.cvtColor(color_image, cv2.COLOR_Lab2BGR) * 255
-    cv2.imwrite('test.png',color_image)
-    print(color_image)
+    color_image = np.uint8(color_image)
+    color_image = cv2.cvtColor(color_image, cv2.COLOR_LAB2BGR)
+
+    original = original.numpy()
+    original = np.transpose(original,(1,2,0))
+    original = np.uint8(original)
+    original = cv2.cvtColor(original,  cv2.COLOR_LAB2BGR)
+    
+    combined_image = np.concatenate((color_image,original), 1)
+    cv2.imwrite('test.png',combined_image)
     print(" --- Image written ---")
