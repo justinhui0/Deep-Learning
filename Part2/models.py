@@ -73,8 +73,8 @@ def train_chrominance_reg(trainloader):
             # print statistics
             running_loss += loss.item()
             if i % statistics_count == (statistics_count - 1):    # print 5 times per epoch
-                print('[%d, %5d] loss: %.3f' %
-                    (epoch + 1, i + 1, running_loss / statistics_count))
+                print('[%d, %5d] loss: %.5f' %
+                    (epoch + 1, i + 1, running_loss / statistics_count * 100))
                 running_loss = 0.0
     
     #save the model with time based name to prevent model overwrite
@@ -144,8 +144,8 @@ def train_colorizer(trainloader):
             # print statistics
             running_loss += loss.item()
             if i % statistics_count == (statistics_count - 1):    # print 5 times per epoch
-                print('[%d, %5d] loss: %.3f' %
-                    (epoch + 1, i + 1, running_loss / statistics_count))
+                print('[%d, %5d] loss: %.5f' %
+                    (epoch + 1, i + 1, running_loss / statistics_count * 100))
                 running_loss = 0.0
     
     #save the model with time based name to prevent model overwrite
