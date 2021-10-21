@@ -190,5 +190,11 @@ def write_img(l, ab, original):
     original = np.uint8(original)
     original = cv2.cvtColor(original,  cv2.COLOR_LAB2BGR)
     
-    combined_image = np.concatenate((original, color_image), 1)
+    gray_image = torch.cat((l*255, l*255, l*255), 0).numpy()
+    gray_image = gray_image.transpose((1, 2, 0))
+    gray_image = gray_image.round()
+    gray_image = np.clip(gray_image,0,255)
+    gray_image = np.uint8(gray_image)
+
+    combined_image = np.concatenate((original, gray_image, color_image), 1)
     cv2.imwrite('test.png',combined_image)
