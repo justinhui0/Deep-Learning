@@ -238,13 +238,13 @@ def colorization_main(model_path=""):
         results = model(inputs)
         results = results.detach()
 
-        for j,val in enumerate(zip(inputs, expected, results)):
-            fname = "test_image_results/img{0:03d}-{1:03d}.png".format(i+1, j+1)
+        for j,val in enumerate(zip(inputs, results, expected)):
+            fname = "test_image_results/img{0:03d}.png".format(i * models.COLORIZE_MINIBATCH_SIZE + j)
             models.write_img(fname, val[0] , val[1], val[2])
             print(" --- Wrote image to '{}'".format(fname))
 
         criterion = nn.MSELoss()
-        loss = criterion(torch.tensor(expected),torch.tensor(results)) * 255
+        loss = criterion(expected,results) * 255
         print(" --- Test Batch #%d Loss: %f ---" % (i+1, loss))
         total_loss += loss
         count += 1
