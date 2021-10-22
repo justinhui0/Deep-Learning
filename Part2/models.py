@@ -138,8 +138,8 @@ class ColorizationNet(nn.Module):
 
 
 def train_colorizer(trainloader):
-    EPOCH_COUNT = 10
-    LEARNING_RATE = 0.002
+    EPOCH_COUNT = 16
+    LEARNING_RATE = 0.003
 
     net = ColorizationNet()
 

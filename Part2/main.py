@@ -239,7 +239,6 @@ def colorization_main(model_path=""):
         results = results.detach()
 
         for j,val in enumerate(zip(inputs, expected, results)):
-            print(j+1)
             fname = "test_image_results/img{0:03d}-{1:03d}.png".format(i+1, j+1)
             models.write_img(fname, val[0] , val[1], val[2])
             print(" --- Wrote image to '{}'".format(fname))
