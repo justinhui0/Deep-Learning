@@ -158,12 +158,11 @@ def chrominance_regressor_main():
 
         #compare expected and actual results of CNN performance on test data
         results = model(images)
-        results = np.multiply(results.detach().numpy(), 255)
-        outputs = np.multiply(outputs.numpy(), 255)
+        results = results.cpu()
         for i,val in enumerate(zip(outputs,results)):
             print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0], val[1]))
         criterion = nn.MSELoss()
-        loss = criterion(torch.tensor(outputs),torch.tensor(results))
+        loss = criterion(outputs,results)
         print(" --- Test Batch #%d Loss: %f ---" % (i+1, loss))
         total_loss += loss
         count += 1
@@ -214,6 +213,8 @@ if __name__ == '__main__':
     regressor = 1
 
     if regressor == 1:
+        print(" --- Training Regressor ---")
         chrominance_regressor_main()
     else:
+        print(" --- Training Colorizer ---")
         colorization_main()
