@@ -184,6 +184,10 @@ def train_colorizer(trainloader, device):
     return net
 
 def write_img(name, l, ab, expected):
+    if torch.cuda.is_available():
+        l = l.cpu()
+        ab = ab.cpu()
+        expected = expected.cpu()
     color_image = torch.cat((l*255, ab), 0).numpy()
     color_image = color_image.transpose((1, 2, 0))
     color_image = color_image.round()
