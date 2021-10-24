@@ -90,7 +90,7 @@ class ColorizationNet(nn.Module):
         
         self.upsample = nn.Sequential(    
             #convtranpse2d inverse of conv2d, upsample inverse of pooling
-            nn.Conv2d(1, 32, 3, stride = 1, padding = 1),
+            nn.Conv2d(1, 32, 3, stride = 1, padding = 1, bias = True),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
@@ -167,7 +167,7 @@ def train_colorizer(trainloader):
             running_loss += loss.item()
             if i % statistics_count == (statistics_count - 1):    # print 5 times per epoch
                 print('[%d, %5d] loss: %.5f' %
-                    (epoch + 1, i + 1, running_loss / statistics_count * 255))
+                    (epoch + 1, i + 1, running_loss / statistics_count / 255))
                 running_loss = 0
                 write_img("test.png",inputs[0],outputs[0].detach() , expected[0])
                 
@@ -178,14 +178,14 @@ def train_colorizer(trainloader):
     return net
 
 def write_img(name, l, ab, expected):
-    color_image = torch.cat((l*255, ab*255), 0).numpy()
+    color_image = torch.cat((l*255, ab), 0).numpy()
     color_image = color_image.transpose((1, 2, 0))
     color_image = color_image.round()
     color_image = np.clip(color_image,0,255)
     color_image = np.uint8(color_image)
     color_image = cv2.cvtColor(color_image, cv2.COLOR_LAB2BGR)
 
-    original = torch.cat((l*255, expected*255), 0).numpy()
+    original = torch.cat((l*255, expected), 0).numpy()
     original = np.transpose(original,(1,2,0))
     original = np.uint8(original)
     original = cv2.cvtColor(original,  cv2.COLOR_LAB2BGR)

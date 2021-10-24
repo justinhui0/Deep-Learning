@@ -28,7 +28,12 @@ class FaceImages(Dataset):
 
         #format data into a tensor of shape (750, 128, 128, 3)
         data_stack = np.stack(data, axis=0)
-        faces_tensor = torch.tensor(data_stack)
+        #if cuda is available  
+        if(torch.cuda.is_available()):
+            faces_tensor = torch.tensor(data_stack, device=torch.device('cuda'))
+        else:
+            faces_tensor = torch.tensor(data_stack)
+
 
         #split tensor into training and testing. 90% is training (675 training images, 75 testing images)
         if self.train:
@@ -49,18 +54,25 @@ class FaceImages(Dataset):
         img = np.transpose(img,(2,0,1))
         
         input_vals = img[0:1,:,:] / 255
-        a_vals = img[1,:,:] / 255
-        b_vals = img[2,:,:] / 255
+        a_vals = img[1,:,:]
+        b_vals = img[2,:,:]
         
         if self.is_regressor:
             a_avg = a_vals.mean()
             b_avg = b_vals.mean()
             output_arr = np.array([a_avg,b_avg])
         else:
+            # a_vals = a_vals * 2 - 1
+            # b_vals = b_vals * 2 - 1
             output_arr = np.array([a_vals,b_vals])
 
-        input_tens = torch.tensor(input_vals).float()
-        output_tens = torch.tensor(output_arr).float()
+        #if cuda is avail, use it
+        if(torch.cuda.is_available()) :
+            input_tens = torch.tensor(input_vals, device=torch.device('cuda')).float()
+            output_tens = torch.tensor(output_arr, device=torch.device('cuda')).float()
+        else:
+            input_tens = torch.tensor(input_vals).float()
+            output_tens = torch.tensor(output_arr).float()
 
         return input_tens, output_tens
 
@@ -75,7 +87,11 @@ class FaceImages(Dataset):
                 augmented_arr[i*10 + j] = augment(img)
         
         augmented_arr = augmented_arr.astype(np.uint8)
-        return torch.tensor(augmented_arr)
+        if(torch.cuda.is_available()):
+            return torch.tensor(augmented_arr, device=torch.device('cuda'))
+        else:
+            return torch.tensor(augmented_arr)
+
 
     #Image Conversion to L* A* B* Color Space
     def convert_images(self, faces_tensor):
@@ -83,10 +99,11 @@ class FaceImages(Dataset):
         for i,img in enumerate(faces_tensor):
             img = img.numpy()
             img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-            converted_tensor[i] = torch.tensor(img)
+            if(torch.cuda.is_available()):
+                converted_tensor[i] = torch.tensor(img, device=torch.device('cuda'))
+            else:
+                converted_tensor[i] = torch.tensor(img)
 
-
-        
         return converted_tensor
 
 
@@ -253,7 +270,7 @@ def colorization_main(model_path=""):
 
 if __name__ == '__main__':
     regressor = 0
-    
+
     if regressor == 1:
         chrominance_regressor_main()
     else:
