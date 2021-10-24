@@ -12,33 +12,35 @@ COLORIZE_MINIBATCH_SIZE = 8
 # REF: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 class Chrominance_Regressor(nn.Module):
     def __init__(self):
-        super(ColorizationNet, self).__init__()
+        super(Chrominance_Regressor, self).__init__()
         
-        self.upsample = nn.Sequential(    
+        self.predict = nn.Sequential(    
             nn.Conv2d(1, 16, 3, stride = 1, padding = 1, bias = True),
-            nn.BatchNorm2d(32),
+            nn.BatchNorm2d(16),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(16, 32, 3, stride = 1, padding = 1),
-            nn.BatchNorm2d(64),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(32, 64, 3, stride = 1, padding = 1),
-            nn.BatchNorm2d(128),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(64, 128, 3, stride = 1, padding = 1),
-            nn.BatchNorm2d(256),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(128, 256, 3, stride = 1, padding = 1),
-            nn.BatchNorm2d(512),
+            nn.BatchNorm2d(256),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(256, 512, 3, stride = 1, padding = 1),
             nn.BatchNorm2d(512),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
+
+            nn.Flatten(),
 
             nn.Linear(2 * 2 * 512, 2048),
             nn.ReLU(),
@@ -64,7 +66,7 @@ class Chrominance_Regressor(nn.Module):
         )
     def forward(self, input):
         # Upsample to get colors
-        output = self.upsample(input)
+        output = self.predict(input)
         return output
 
 #Regressor
