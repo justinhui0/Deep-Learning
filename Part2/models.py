@@ -44,8 +44,8 @@ class Chrominance_Regressor(nn.Module):
 
 #Regressor
 def train_chrominance_reg(trainloader, device):
-    EPOCH_COUNT = 8
-    LEARNING_RATE = 0.002
+    EPOCH_COUNT = 16
+    LEARNING_RATE = 0.003
 
     net = Chrominance_Regressor()
 
