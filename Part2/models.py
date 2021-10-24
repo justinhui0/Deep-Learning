@@ -15,28 +15,22 @@ class Chrominance_Regressor(nn.Module):
         super(Chrominance_Regressor, self).__init__()
         
         self.predict = nn.Sequential(    
-            nn.Conv2d(1, 16, 3, stride = 1, padding = 1, bias = True),
-            nn.BatchNorm2d(16),
+            nn.Conv2d(1, 16, 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(16, 32, 3, stride = 1, padding = 1),
-            nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(32, 64, 3, stride = 1, padding = 1),
-            nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(64, 128, 3, stride = 1, padding = 1),
-            nn.BatchNorm2d(128),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(128, 256, 3, stride = 1, padding = 1),
-            nn.BatchNorm2d(256),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
             nn.Conv2d(256, 512, 3, stride = 1, padding = 1),
-            nn.BatchNorm2d(512),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
 
@@ -71,8 +65,8 @@ class Chrominance_Regressor(nn.Module):
 
 #Regressor
 def train_chrominance_reg(trainloader, device):
-    EPOCH_COUNT = 28
-    LEARNING_RATE = 0.003
+    EPOCH_COUNT = 32
+    LEARNING_RATE = 0.0005
 
     net = Chrominance_Regressor()
 
@@ -84,7 +78,7 @@ def train_chrominance_reg(trainloader, device):
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=LEARNING_RATE)
 
-    statistics_count = 6750 / (CHROMREG_MINIBATCH_SIZE * 5)
+    statistics_count = round(6750 / (CHROMREG_MINIBATCH_SIZE * 5))
     for epoch in range(EPOCH_COUNT):  # loop over the dataset multiple times
         net.train()
         running_loss = 0.0
@@ -116,7 +110,7 @@ class ColorizationNet(nn.Module):
         super(ColorizationNet, self).__init__()
         
         self.upsample = nn.Sequential(    
-            nn.Conv2d(1, 32, 3, stride = 1, padding = 1, bias = True),
+            nn.Conv2d(1, 32, 3, stride = 1, padding = 1),
             nn.BatchNorm2d(32),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
