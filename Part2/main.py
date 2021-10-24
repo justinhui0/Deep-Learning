@@ -34,10 +34,7 @@ class FaceImages(Dataset):
 
         #format data into a tensor of shape (750, 128, 128, 3)
         data_stack = np.stack(data, axis=0)
-        #if cuda is available  
-        #if(torch.cuda.is_available()):
-            #faces_tensor = torch.tensor(data_stack, device=torch.device('cuda'))
-        #else:
+
         faces_tensor = torch.tensor(data_stack)
 
 
@@ -68,8 +65,6 @@ class FaceImages(Dataset):
             b_avg = b_vals.mean()
             output_arr = np.array([a_avg,b_avg])
         else:
-            # a_vals = a_vals * 2 - 1
-            # b_vals = b_vals * 2 - 1
             output_arr = np.array([a_vals,b_vals])
 
         #if cuda is avail, use it
@@ -89,9 +84,7 @@ class FaceImages(Dataset):
                 augmented_arr[i*10 + j] = augment(img)
         
         augmented_arr = augmented_arr.astype(np.uint8)
-        #if(torch.cuda.is_available()):
-            #return torch.tensor(augmented_arr, device=torch.device('cuda'))
-        #else:
+
         return torch.tensor(augmented_arr)
 
 
@@ -101,13 +94,9 @@ class FaceImages(Dataset):
         for i,img in enumerate(faces_tensor):
             img = img.numpy()
             img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-            #if(torch.cuda.is_available()):
-                #converted_tensor[i] = torch.tensor(img, device=torch.device('cuda'))
-            #else:
             converted_tensor[i] = torch.tensor(img)
 
         return converted_tensor
-
 
 
 #Augmentations 
@@ -131,7 +120,6 @@ def scale_rgb(img):
     scale_val = random.uniform(0.6,0.99)
     return np.multiply(img, scale_val).round()
 
-# TODO: add more
 augmentations = [
     lambda x: x,
     lambda x: random_crop(x, (0.65, 0.9)),
@@ -146,59 +134,18 @@ augmentations = [
     lambda x: scale_rgb(random_crop(x, (0.3, 0.7))),
 ]
 
-#display an inputted image
-def show_image(img):
-    if not isinstance(img, np.ndarray):
-        new_img = img.numpy()
-    else:
-        new_img = img
-    cv2.imshow("Part 2 Image", new_img)
-    cv2.waitKey(0)
 
+def chrominance_regressor_main():
+    print(" --- Loading Data ---")
+    # implementing dataloader on the dataset and printing per batch
+    trainset = FaceImages(train=True,augmentations=augmentations)
+    trainloader = DataLoader(trainset, batch_size=models.CHROMREG_MINIBATCH_SIZE, shuffle=True)
 
-def get_model_path(extension):
-    # user input to select a saved model or specify if training a new model
-    model_names = glob.glob("*." + extension)
-    if len(model_names) == 0:
-        train = True
-    else:
-        resp = ""
-        while resp != "y" and resp != "n":
-            resp = input("Train new model? (y/n): ")
-        train = resp == 'y'
-    if not train:
-        print("Model Options:")
-        for i, name in enumerate(model_names):
-            print("\t{}. {}".format(i+1, name))
-        resp = 0
-        while resp < 1 or resp > len(model_names):
-            resp_str = input("Enter which numbered model to evaluate: ")
-            if resp_str.isnumeric():
-                resp = int(resp_str)
-        model_path = model_names[resp - 1]
-    if train:
-        model_path = None
-    return model_path
-
-def chrominance_regressor_main(model_path=""):
-    if model_path == "":
-        model_path = get_model_path("regmodel")
-
-    if model_path == None:
-        print(" --- Loading Data ---")
-        # implementing dataloader on the dataset and printing per batch
-        trainset = FaceImages(train=True,augmentations=augmentations)
-        trainloader = DataLoader(trainset, batch_size=models.CHROMREG_MINIBATCH_SIZE, shuffle=True)
-
-        print(" --- Finished Loading Data, Training model ---")
-        model = models.train_chrominance_reg(trainloader)
-        print(" --- Finished Training ---")
+    print(" --- Finished Loading Data, Training model ---")
+    model = models.train_chrominance_reg(trainloader, device)
+    print(" --- Finished Training ---")
     
-    else:
-        #load selected model
-        model = models.Chrominance_Regressor()
-        model.load_state_dict(torch.load(model_path))
-    
+
     model.eval()
 
     testset = FaceImages(train=False)
@@ -225,24 +172,17 @@ def chrominance_regressor_main(model_path=""):
 
     
 def colorization_main(model_path=""):
-    if model_path == "":
-        model_path = get_model_path("colormodel")
-
-    if model_path == None:
-        print(" --- Loading Data ---")
-        # implementing dataloader on the dataset and printing per batch
-        trainset = FaceImages(train=True, augmentations=augmentations, is_regressor=False)
-        trainloader = DataLoader(trainset, batch_size=models.COLORIZE_MINIBATCH_SIZE, shuffle=True)
-
-        print(" --- Finished Loading Data, Training model ---")
-        model = models.train_colorizer(trainloader, device)
-        print(" --- Finished Training ---")
     
-    else:
-        #load selected model
-        model = models.ColorizationNet()
-        model.load_state_dict(torch.load(model_path))
+    print(" --- Loading Data ---")
+    # implementing dataloader on the dataset and printing per batch
+    trainset = FaceImages(train=True, augmentations=augmentations, is_regressor=False)
+    trainloader = DataLoader(trainset, batch_size=models.COLORIZE_MINIBATCH_SIZE, shuffle=True)
+
+    print(" --- Finished Loading Data, Training model ---")
+    model = models.train_colorizer(trainloader, device)
+    print(" --- Finished Training ---")
     
+
     model.eval()
 
     testset = FaceImages(train=False, is_regressor=False)
@@ -271,9 +211,9 @@ def colorization_main(model_path=""):
     print("\n --- Average MSE Loss: %f" % (total_loss / count))
 
 if __name__ == '__main__':
-    regressor = 0
+    regressor = 1
 
     if regressor == 1:
         chrominance_regressor_main()
     else:
-        colorization_main(None)
+        colorization_main()

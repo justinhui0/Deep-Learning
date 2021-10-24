@@ -9,7 +9,6 @@ import cv2
 CHROMREG_MINIBATCH_SIZE = 8
 COLORIZE_MINIBATCH_SIZE = 8
 
-#TODO: make this regressor work well. currently suffering from high loss and for some reason the two outputs are almost always basically the same number
 # REF: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 class Chrominance_Regressor(nn.Module):
     def __init__(self):
@@ -44,16 +43,21 @@ class Chrominance_Regressor(nn.Module):
         return x
 
 #Regressor
-def train_chrominance_reg(trainloader):
-    EPOCH_COUNT = 2
+def train_chrominance_reg(trainloader, device):
+    EPOCH_COUNT = 8
     LEARNING_RATE = 0.002
 
     net = Chrominance_Regressor()
 
+    if torch.cuda.device_count() > 1:
+        net = nn.DataParallel(net)
+
+    net.to(device)
+
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=LEARNING_RATE)
 
-    statistics_count = 7500 / (CHROMREG_MINIBATCH_SIZE * 5)
+    statistics_count = 6750 / (CHROMREG_MINIBATCH_SIZE * 5)
     for epoch in range(EPOCH_COUNT):  # loop over the dataset multiple times
         net.train()
         running_loss = 0.0
@@ -74,13 +78,9 @@ def train_chrominance_reg(trainloader):
             running_loss += loss.item()
             if i % statistics_count == (statistics_count - 1):    # print 5 times per epoch
                 print('[%d, %5d] loss: %.5f' %
-                    (epoch + 1, i + 1, running_loss / statistics_count * 100))
+                    (epoch + 1, i + 1, running_loss / statistics_count))
                 running_loss = 0.0
     
-    #save the model with time based name to prevent model overwrite
-    now = datetime.now()
-    model_path = now.strftime("part2_%m-%d_%H.%M.regmodel")
-    torch.save(net.state_dict(), model_path)
     return net
 
 
@@ -144,7 +144,6 @@ def train_colorizer(trainloader, device):
     net = ColorizationNet()
 
     if torch.cuda.device_count() > 1:
-        print("Let's use", torch.cuda.device_count(), "GPUs!")
         net = nn.DataParallel(net)
 
     net.to(device)
@@ -175,12 +174,7 @@ def train_colorizer(trainloader, device):
                 print('[%d, %5d] loss: %.5f' %
                     (epoch + 1, i + 1, running_loss / statistics_count))
                 running_loss = 0
-                write_img("test.png",inputs[0],outputs[0].detach() , expected[0])
                 
-    #save the model with time based name to prevent model overwrite
-    now = datetime.now()
-    model_path = now.strftime("part2_%m-%d_%H.%M.colormodel")
-    torch.save(net.state_dict(), model_path)
     return net
 
 def write_img(name, l, ab, expected):
