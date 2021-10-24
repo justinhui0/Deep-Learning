@@ -29,10 +29,10 @@ class FaceImages(Dataset):
         #format data into a tensor of shape (750, 128, 128, 3)
         data_stack = np.stack(data, axis=0)
         #if cuda is available  
-        if(torch.cuda.is_available()):
-            faces_tensor = torch.tensor(data_stack, device=torch.device('cuda'))
-        else:
-            faces_tensor = torch.tensor(data_stack)
+        #if(torch.cuda.is_available()):
+            #faces_tensor = torch.tensor(data_stack, device=torch.device('cuda'))
+        #else:
+        faces_tensor = torch.tensor(data_stack)
 
 
         #split tensor into training and testing. 90% is training (675 training images, 75 testing images)
@@ -87,10 +87,10 @@ class FaceImages(Dataset):
                 augmented_arr[i*10 + j] = augment(img)
         
         augmented_arr = augmented_arr.astype(np.uint8)
-        if(torch.cuda.is_available()):
-            return torch.tensor(augmented_arr, device=torch.device('cuda'))
-        else:
-            return torch.tensor(augmented_arr)
+        #if(torch.cuda.is_available()):
+            #return torch.tensor(augmented_arr, device=torch.device('cuda'))
+        #else:
+        return torch.tensor(augmented_arr)
 
 
     #Image Conversion to L* A* B* Color Space
@@ -99,10 +99,10 @@ class FaceImages(Dataset):
         for i,img in enumerate(faces_tensor):
             img = img.numpy()
             img = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-            if(torch.cuda.is_available()):
-                converted_tensor[i] = torch.tensor(img, device=torch.device('cuda'))
-            else:
-                converted_tensor[i] = torch.tensor(img)
+            #if(torch.cuda.is_available()):
+                #converted_tensor[i] = torch.tensor(img, device=torch.device('cuda'))
+            #else:
+            converted_tensor[i] = torch.tensor(img)
 
         return converted_tensor
 
@@ -274,4 +274,4 @@ if __name__ == '__main__':
     if regressor == 1:
         chrominance_regressor_main()
     else:
-        colorization_main()
+        colorization_main(None)
