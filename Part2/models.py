@@ -12,43 +12,60 @@ COLORIZE_MINIBATCH_SIZE = 8
 # REF: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
 class Chrominance_Regressor(nn.Module):
     def __init__(self):
-        super().__init__()
-        # implementation of convolution downsampling and FC layers for regression output
-        self.conv1 = nn.Conv2d(1, 8, 3, stride = 1, padding = 1)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(8, 16, 3, stride = 1, padding = 1)
-        self.conv3 = nn.Conv2d(16, 32, 3, stride = 1, padding = 1)
-        self.conv4 = nn.Conv2d(32, 64, 3, stride = 1, padding = 1)
-        self.conv5 = nn.Conv2d(64, 128, 3, stride = 1, padding = 1)
-        self.fc1 = nn.Linear(4 * 4 * 128, 1024)
-        self.fc2 = nn.Linear(1024, 512)
-        self.fc3 = nn.Linear(512, 256)
-        self.fc4 = nn.Linear(256, 128)
-        self.fc5 = nn.Linear(128, 64)
-        self.fc6 = nn.Linear(64, 32)
-        self.fc7 = nn.Linear(32, 16)
-        self.fc8 = nn.Linear(16, 8)
-        self.fc9 = nn.Linear(8, 4)
-        self.fc10 = nn.Linear(4, 2)
+        super(ColorizationNet, self).__init__()
+        
+        self.upsample = nn.Sequential(    
+            nn.Conv2d(1, 16, 3, stride = 1, padding = 1, bias = True),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(16, 32, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(32, 64, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(64, 128, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(128, 256, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
+            nn.Conv2d(256, 512, 3, stride = 1, padding = 1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),
 
-    def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = self.pool(F.relu(self.conv3(x)))
-        x = self.pool(F.relu(self.conv4(x)))
-        x = self.pool(F.relu(self.conv5(x)))
-        x = torch.flatten(x, 1) # flatten all dimensions except batch
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        x = F.relu(self.fc4(x))
-        x = F.relu(self.fc5(x))
-        x = F.relu(self.fc6(x))
-        x = F.relu(self.fc7(x))
-        x = F.relu(self.fc8(x))
-        x = F.relu(self.fc9(x))
-        x = self.fc10(x)
-        return x
+            nn.Linear(2 * 2 * 512, 2048),
+            nn.ReLU(),
+            nn.Linear(2048, 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 16),
+            nn.ReLU(),
+            nn.Linear(16, 8),
+            nn.ReLU(),
+            nn.Linear(8, 4),
+            nn.ReLU(),
+            nn.Linear(4, 2)
+        )
+    def forward(self, input):
+        # Upsample to get colors
+        output = self.upsample(input)
+        return output
 
 #Regressor
 def train_chrominance_reg(trainloader, device):
@@ -97,7 +114,6 @@ class ColorizationNet(nn.Module):
         super(ColorizationNet, self).__init__()
         
         self.upsample = nn.Sequential(    
-            #convtranpse2d inverse of conv2d, upsample inverse of pooling
             nn.Conv2d(1, 32, 3, stride = 1, padding = 1, bias = True),
             nn.BatchNorm2d(32),
             nn.ReLU(),
