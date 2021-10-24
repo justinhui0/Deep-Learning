@@ -6,7 +6,7 @@ from datetime import datetime
 import numpy as np
 import cv2
 
-CHROMREG_MINIBATCH_SIZE = 10
+CHROMREG_MINIBATCH_SIZE = 8
 COLORIZE_MINIBATCH_SIZE = 8
 
 #TODO: make this regressor work well. currently suffering from high loss and for some reason the two outputs are almost always basically the same number
@@ -138,7 +138,7 @@ class ColorizationNet(nn.Module):
 
 
 def train_colorizer(trainloader, device):
-    EPOCH_COUNT = 16
+    EPOCH_COUNT = 32
     LEARNING_RATE = 0.003
 
     net = ColorizationNet()
@@ -173,7 +173,7 @@ def train_colorizer(trainloader, device):
             running_loss += loss.item()
             if i % statistics_count == (statistics_count - 1):    # print 5 times per epoch
                 print('[%d, %5d] loss: %.5f' %
-                    (epoch + 1, i + 1, running_loss / statistics_count / 255))
+                    (epoch + 1, i + 1, running_loss / statistics_count))
                 running_loss = 0
                 write_img("test.png",inputs[0],outputs[0].detach() , expected[0])
                 

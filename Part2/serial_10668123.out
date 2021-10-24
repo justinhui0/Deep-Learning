@@ -1,0 +1,37 @@
+/blue/cis6930/cburrows/Deep-Learning/Part2
+c0800a-s11.ufhpc
+Sun Oct 24 16:55:17 EDT 2021
+Running part 2
+/apps/python/3.8/lib/python3.8/site-packages/torch/cuda/__init__.py:106: UserWarning: 
+A100-SXM-80GB with CUDA capability sm_80 is not compatible with the current PyTorch installation.
+The current PyTorch install supports CUDA capabilities sm_37 sm_50 sm_60 sm_70.
+If you want to use the A100-SXM-80GB GPU with PyTorch, please check the instructions at https://pytorch.org/get-started/locally/
+
+  warnings.warn(incompatible_device_warn.format(device_name, capability, " ".join(arch_list), device_name))
+Using GPU
+ --- Loading Data ---
+ --- Finished Loading Data, Training model ---
+Let's use 2 GPUs!
+Traceback (most recent call last):
+  File "./main.py", line 279, in <module>
+    colorization_main(None)
+  File "./main.py", line 238, in colorization_main
+    model = models.train_colorizer(trainloader, device)
+  File "/blue/cis6930/cburrows/Deep-Learning/Part2/models.py", line 159, in train_colorizer
+    for i, data in enumerate(trainloader, 0):
+  File "/apps/python/3.8/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 521, in __next__
+    data = self._next_data()
+  File "/apps/python/3.8/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 561, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/apps/python/3.8/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 47, in fetch
+    return self.collate_fn(data)
+  File "/apps/python/3.8/lib/python3.8/site-packages/torch/utils/data/_utils/collate.py", line 84, in default_collate
+    return [default_collate(samples) for samples in transposed]
+  File "/apps/python/3.8/lib/python3.8/site-packages/torch/utils/data/_utils/collate.py", line 84, in <listcomp>
+    return [default_collate(samples) for samples in transposed]
+  File "/apps/python/3.8/lib/python3.8/site-packages/torch/utils/data/_utils/collate.py", line 56, in default_collate
+    return torch.stack(batch, 0, out=out)
+RuntimeError: CUDA error: no kernel image is available for execution on the device
+CUDA kernel errors might be asynchronously reported at some other API call,so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Sun Oct 24 16:55:25 EDT 2021

@@ -1,0 +1,289 @@
+/blue/cis6930/cburrows/Deep-Learning/Part2
+c44a-s13.ufhpc
+Sun Oct 24 17:45:54 EDT 2021
+Running part 2
+/apps/python/3.8/lib/python3.8/site-packages/torch/nn/functional.py:718: UserWarning: Named tensors and all their associated APIs are an experimental feature and subject to change. Please do not use them for anything important until they are released as stable. (Triggered internally at  /pytorch/c10/core/TensorImpl.h:1156.)
+  return torch.max_pool2d(input, kernel_size, stride, padding, dilation, ceil_mode)
+Using GPU
+ --- Loading Data ---
+ --- Finished Loading Data, Training model ---
+Let's use 4 GPUs!
+[1,   112] loss: 11358.21505
+[1,   224] loss: 568.02772
+[1,   336] loss: 72.81215
+[1,   448] loss: 61.94477
+[1,   560] loss: 55.69329
+[1,   672] loss: 49.06648
+[2,   112] loss: 42.92993
+[2,   224] loss: 36.97356
+[2,   336] loss: 34.57230
+[2,   448] loss: 32.04096
+[2,   560] loss: 29.35356
+[2,   672] loss: 27.69844
+[3,   112] loss: 27.19063
+[3,   224] loss: 25.58300
+[3,   336] loss: 25.69505
+[3,   448] loss: 24.61803
+[3,   560] loss: 24.27959
+[3,   672] loss: 23.93482
+[4,   112] loss: 23.73931
+[4,   224] loss: 22.39567
+[4,   336] loss: 21.83895
+[4,   448] loss: 22.09043
+[4,   560] loss: 20.29325
+[4,   672] loss: 21.00055
+[5,   112] loss: 21.29857
+[5,   224] loss: 20.20641
+[5,   336] loss: 20.83807
+[5,   448] loss: 19.63855
+[5,   560] loss: 19.52234
+[5,   672] loss: 18.99595
+[6,   112] loss: 18.45493
+[6,   224] loss: 18.33503
+[6,   336] loss: 18.82245
+[6,   448] loss: 19.01567
+[6,   560] loss: 18.15268
+[6,   672] loss: 18.07287
+[7,   112] loss: 17.55647
+[7,   224] loss: 16.82958
+[7,   336] loss: 17.71205
+[7,   448] loss: 17.10103
+[7,   560] loss: 16.23309
+[7,   672] loss: 16.67480
+[8,   112] loss: 15.81292
+[8,   224] loss: 16.09889
+[8,   336] loss: 18.26097
+[8,   448] loss: 15.22056
+[8,   560] loss: 16.26088
+[8,   672] loss: 16.14863
+[9,   112] loss: 14.89376
+[9,   224] loss: 15.11951
+[9,   336] loss: 13.99505
+[9,   448] loss: 14.79212
+[9,   560] loss: 14.13708
+[9,   672] loss: 14.27666
+[10,   112] loss: 13.62226
+[10,   224] loss: 13.44774
+[10,   336] loss: 13.28225
+[10,   448] loss: 13.29357
+[10,   560] loss: 12.94208
+[10,   672] loss: 13.82637
+[11,   112] loss: 12.43928
+[11,   224] loss: 12.01740
+[11,   336] loss: 12.71687
+[11,   448] loss: 11.46870
+[11,   560] loss: 11.80464
+[11,   672] loss: 11.86027
+[12,   112] loss: 10.50400
+[12,   224] loss: 10.72628
+[12,   336] loss: 11.20528
+[12,   448] loss: 10.98122
+[12,   560] loss: 11.01166
+[12,   672] loss: 10.59327
+[13,   112] loss: 9.56668
+[13,   224] loss: 9.74631
+[13,   336] loss: 9.93859
+[13,   448] loss: 10.24519
+[13,   560] loss: 9.85379
+[13,   672] loss: 9.65069
+[14,   112] loss: 9.39717
+[14,   224] loss: 8.76250
+[14,   336] loss: 8.67494
+[14,   448] loss: 9.00786
+[14,   560] loss: 8.70608
+[14,   672] loss: 9.13660
+[15,   112] loss: 8.00693
+[15,   224] loss: 8.35810
+[15,   336] loss: 7.75925
+[15,   448] loss: 8.30658
+[15,   560] loss: 8.60099
+[15,   672] loss: 8.40449
+[16,   112] loss: 7.73799
+[16,   224] loss: 7.54851
+[16,   336] loss: 7.50288
+[16,   448] loss: 7.57056
+[16,   560] loss: 7.65241
+[16,   672] loss: 7.67834
+[17,   112] loss: 7.04751
+[17,   224] loss: 6.77271
+[17,   336] loss: 6.83732
+[17,   448] loss: 7.15436
+[17,   560] loss: 6.84177
+[17,   672] loss: 7.13822
+[18,   112] loss: 6.70018
+[18,   224] loss: 6.54752
+[18,   336] loss: 6.68692
+[18,   448] loss: 6.80675
+[18,   560] loss: 6.99214
+[18,   672] loss: 6.96007
+[19,   112] loss: 6.15258
+[19,   224] loss: 6.49624
+[19,   336] loss: 6.45523
+[19,   448] loss: 6.54582
+[19,   560] loss: 6.54492
+[19,   672] loss: 6.12419
+[20,   112] loss: 6.44085
+[20,   224] loss: 6.21928
+[20,   336] loss: 5.98067
+[20,   448] loss: 5.88790
+[20,   560] loss: 6.05423
+[20,   672] loss: 5.83678
+[21,   112] loss: 5.75686
+[21,   224] loss: 5.79946
+[21,   336] loss: 5.76459
+[21,   448] loss: 5.79461
+[21,   560] loss: 5.89593
+[21,   672] loss: 5.86550
+[22,   112] loss: 5.65736
+[22,   224] loss: 5.92535
+[22,   336] loss: 5.58775
+[22,   448] loss: 5.75383
+[22,   560] loss: 5.82587
+[22,   672] loss: 5.71977
+[23,   112] loss: 5.58479
+[23,   224] loss: 5.33598
+[23,   336] loss: 5.37540
+[23,   448] loss: 5.49789
+[23,   560] loss: 5.40124
+[23,   672] loss: 5.42177
+[24,   112] loss: 5.35730
+[24,   224] loss: 5.06247
+[24,   336] loss: 5.07134
+[24,   448] loss: 5.10139
+[24,   560] loss: 5.55323
+[24,   672] loss: 5.24483
+[25,   112] loss: 5.12357
+[25,   224] loss: 5.05499
+[25,   336] loss: 5.17822
+[25,   448] loss: 5.13082
+[25,   560] loss: 5.76452
+[25,   672] loss: 5.28278
+[26,   112] loss: 4.94241
+[26,   224] loss: 5.14779
+[26,   336] loss: 5.00631
+[26,   448] loss: 5.10307
+[26,   560] loss: 4.83485
+[26,   672] loss: 5.21439
+[27,   112] loss: 4.62089
+[27,   224] loss: 4.70901
+[27,   336] loss: 4.73181
+[27,   448] loss: 5.03475
+[27,   560] loss: 4.95326
+[27,   672] loss: 5.12687
+[28,   112] loss: 4.52250
+[28,   224] loss: 4.69982
+[28,   336] loss: 4.70749
+[28,   448] loss: 4.71371
+[28,   560] loss: 4.76742
+[28,   672] loss: 4.82528
+[29,   112] loss: 4.52580
+[29,   224] loss: 4.55749
+[29,   336] loss: 4.68842
+[29,   448] loss: 4.83200
+[29,   560] loss: 4.60056
+[29,   672] loss: 4.65989
+[30,   112] loss: 4.49878
+[30,   224] loss: 4.70721
+[30,   336] loss: 4.69722
+[30,   448] loss: 4.47866
+[30,   560] loss: 4.60275
+[30,   672] loss: 4.33197
+[31,   112] loss: 4.31244
+[31,   224] loss: 4.32240
+[31,   336] loss: 4.35254
+[31,   448] loss: 4.40592
+[31,   560] loss: 4.35310
+[31,   672] loss: 4.35532
+[32,   112] loss: 4.16251
+[32,   224] loss: 4.10404
+[32,   336] loss: 4.40260
+[32,   448] loss: 4.25775
+[32,   560] loss: 4.24746
+[32,   672] loss: 4.38452
+ --- Finished Training ---
+ --- Wrote image to 'test_image_results/img000.png'
+ --- Wrote image to 'test_image_results/img001.png'
+ --- Wrote image to 'test_image_results/img002.png'
+ --- Wrote image to 'test_image_results/img003.png'
+ --- Wrote image to 'test_image_results/img004.png'
+ --- Wrote image to 'test_image_results/img005.png'
+ --- Wrote image to 'test_image_results/img006.png'
+ --- Wrote image to 'test_image_results/img007.png'
+ --- Wrote image to 'test_image_results/img008.png'
+ --- Wrote image to 'test_image_results/img009.png'
+ --- Test Batch #1 Loss: 5.344013 ---
+ --- Wrote image to 'test_image_results/img010.png'
+ --- Wrote image to 'test_image_results/img011.png'
+ --- Wrote image to 'test_image_results/img012.png'
+ --- Wrote image to 'test_image_results/img013.png'
+ --- Wrote image to 'test_image_results/img014.png'
+ --- Wrote image to 'test_image_results/img015.png'
+ --- Wrote image to 'test_image_results/img016.png'
+ --- Wrote image to 'test_image_results/img017.png'
+ --- Wrote image to 'test_image_results/img018.png'
+ --- Wrote image to 'test_image_results/img019.png'
+ --- Test Batch #2 Loss: 4.691999 ---
+ --- Wrote image to 'test_image_results/img020.png'
+ --- Wrote image to 'test_image_results/img021.png'
+ --- Wrote image to 'test_image_results/img022.png'
+ --- Wrote image to 'test_image_results/img023.png'
+ --- Wrote image to 'test_image_results/img024.png'
+ --- Wrote image to 'test_image_results/img025.png'
+ --- Wrote image to 'test_image_results/img026.png'
+ --- Wrote image to 'test_image_results/img027.png'
+ --- Wrote image to 'test_image_results/img028.png'
+ --- Wrote image to 'test_image_results/img029.png'
+ --- Test Batch #3 Loss: 4.090758 ---
+ --- Wrote image to 'test_image_results/img030.png'
+ --- Wrote image to 'test_image_results/img031.png'
+ --- Wrote image to 'test_image_results/img032.png'
+ --- Wrote image to 'test_image_results/img033.png'
+ --- Wrote image to 'test_image_results/img034.png'
+ --- Wrote image to 'test_image_results/img035.png'
+ --- Wrote image to 'test_image_results/img036.png'
+ --- Wrote image to 'test_image_results/img037.png'
+ --- Wrote image to 'test_image_results/img038.png'
+ --- Wrote image to 'test_image_results/img039.png'
+ --- Test Batch #4 Loss: 5.658324 ---
+ --- Wrote image to 'test_image_results/img040.png'
+ --- Wrote image to 'test_image_results/img041.png'
+ --- Wrote image to 'test_image_results/img042.png'
+ --- Wrote image to 'test_image_results/img043.png'
+ --- Wrote image to 'test_image_results/img044.png'
+ --- Wrote image to 'test_image_results/img045.png'
+ --- Wrote image to 'test_image_results/img046.png'
+ --- Wrote image to 'test_image_results/img047.png'
+ --- Wrote image to 'test_image_results/img048.png'
+ --- Wrote image to 'test_image_results/img049.png'
+ --- Test Batch #5 Loss: 4.652689 ---
+ --- Wrote image to 'test_image_results/img050.png'
+ --- Wrote image to 'test_image_results/img051.png'
+ --- Wrote image to 'test_image_results/img052.png'
+ --- Wrote image to 'test_image_results/img053.png'
+ --- Wrote image to 'test_image_results/img054.png'
+ --- Wrote image to 'test_image_results/img055.png'
+ --- Wrote image to 'test_image_results/img056.png'
+ --- Wrote image to 'test_image_results/img057.png'
+ --- Wrote image to 'test_image_results/img058.png'
+ --- Wrote image to 'test_image_results/img059.png'
+ --- Test Batch #6 Loss: 7.762076 ---
+ --- Wrote image to 'test_image_results/img060.png'
+ --- Wrote image to 'test_image_results/img061.png'
+ --- Wrote image to 'test_image_results/img062.png'
+ --- Wrote image to 'test_image_results/img063.png'
+ --- Wrote image to 'test_image_results/img064.png'
+ --- Wrote image to 'test_image_results/img065.png'
+ --- Wrote image to 'test_image_results/img066.png'
+ --- Wrote image to 'test_image_results/img067.png'
+ --- Wrote image to 'test_image_results/img068.png'
+ --- Wrote image to 'test_image_results/img069.png'
+ --- Test Batch #7 Loss: 6.839465 ---
+ --- Wrote image to 'test_image_results/img070.png'
+ --- Wrote image to 'test_image_results/img071.png'
+ --- Wrote image to 'test_image_results/img072.png'
+ --- Wrote image to 'test_image_results/img073.png'
+ --- Wrote image to 'test_image_results/img074.png'
+ --- Test Batch #8 Loss: 4.648473 ---
+
+ --- Average MSE Loss: 5.460975
+Sun Oct 24 17:53:19 EDT 2021

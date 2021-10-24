@@ -263,7 +263,7 @@ def colorization_main(model_path=""):
             print(" --- Wrote image to '{}'".format(fname))
 
         criterion = nn.MSELoss()
-        loss = criterion(expected,results) * 255
+        loss = criterion(expected,results)
         print(" --- Test Batch #%d Loss: %f ---" % (i+1, loss))
         total_loss += loss
         count += 1
