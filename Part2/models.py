@@ -16,9 +16,9 @@ class Chrominance_Regressor(nn.Module):
         # implementation of convolution downsampling and FC layers for regression output
         self.conv1 = nn.Conv2d(1, 8, 3, stride = 1, padding = 1)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(16, 16, 3, stride = 1, padding = 1)
-        self.conv3 = nn.Conv2d(32, 32, 3, stride = 1, padding = 1)
-        self.conv4 = nn.Conv2d(64, 64, 3, stride = 1, padding = 1)
+        self.conv2 = nn.Conv2d(8, 16, 3, stride = 1, padding = 1)
+        self.conv3 = nn.Conv2d(16, 32, 3, stride = 1, padding = 1)
+        self.conv4 = nn.Conv2d(32, 64, 3, stride = 1, padding = 1)
         self.conv5 = nn.Conv2d(64, 128, 3, stride = 1, padding = 1)
         self.fc1 = nn.Linear(4 * 4 * 128, 1024)
         self.fc2 = nn.Linear(1024, 512)
