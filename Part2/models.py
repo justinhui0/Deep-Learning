@@ -137,11 +137,17 @@ class ColorizationNet(nn.Module):
         return output
 
 
-def train_colorizer(trainloader):
+def train_colorizer(trainloader, device):
     EPOCH_COUNT = 16
     LEARNING_RATE = 0.003
 
     net = ColorizationNet()
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPUs!")
+        net = nn.DataParallel(net)
+
+    net.to(device)
 
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=LEARNING_RATE)

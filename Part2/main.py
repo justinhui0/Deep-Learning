@@ -12,6 +12,12 @@ import models
 #reduces memory requirements (32-bit float)
 torch.set_default_tensor_type(torch.FloatTensor)
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+if torch.cuda.is_available():
+    print("Using GPU")
+else:
+    print("Using CPU")
+
 # defining the Dataset class
 class FaceImages(Dataset):
     def __init__(self,train=True, augmentations=None, is_regressor=True):
@@ -67,12 +73,8 @@ class FaceImages(Dataset):
             output_arr = np.array([a_vals,b_vals])
 
         #if cuda is avail, use it
-        if(torch.cuda.is_available()) :
-            input_tens = torch.tensor(input_vals, device=torch.device('cuda')).float()
-            output_tens = torch.tensor(output_arr, device=torch.device('cuda')).float()
-        else:
-            input_tens = torch.tensor(input_vals).float()
-            output_tens = torch.tensor(output_arr).float()
+        input_tens = torch.tensor(input_vals).float().to(device)
+        output_tens = torch.tensor(output_arr).float().to(device)
 
         return input_tens, output_tens
 
@@ -233,7 +235,7 @@ def colorization_main(model_path=""):
         trainloader = DataLoader(trainset, batch_size=models.COLORIZE_MINIBATCH_SIZE, shuffle=True)
 
         print(" --- Finished Loading Data, Training model ---")
-        model = models.train_colorizer(trainloader)
+        model = models.train_colorizer(trainloader, device)
         print(" --- Finished Training ---")
     
     else:
