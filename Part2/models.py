@@ -6,7 +6,7 @@ from datetime import datetime
 import numpy as np
 import cv2
 
-CHROMREG_MINIBATCH_SIZE = 8
+CHROMREG_MINIBATCH_SIZE = 10
 COLORIZE_MINIBATCH_SIZE = 8
 
 # REF: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -14,18 +14,20 @@ class Chrominance_Regressor(nn.Module):
     def __init__(self):
         super().__init__()
         # implementation of convolution downsampling and FC layers for regression output
-        self.conv1 = nn.Conv2d(1, 128, 5, stride = 1, padding = 2)
+        self.conv1 = nn.Conv2d(1, 16, 3, stride = 1, padding = 1)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(128, 128, 5, stride = 1, padding = 2)
-        self.conv3 = nn.Conv2d(128, 64, 3, stride = 1, padding = 1)
-        self.conv4 = nn.Conv2d(64, 32, 3, stride = 1, padding = 1)
-        self.conv5 = nn.Conv2d(32, 16, 3, stride = 1, padding = 1)
-        self.fc1 = nn.Linear(4 * 4 * 16, 256)
-        self.fc2 = nn.Linear(256, 64)
-        self.fc3 = nn.Linear(64, 32)
-        self.fc4 = nn.Linear(32, 8)
-        self.fc5 = nn.Linear(8, 4)
-        self.fc6 = nn.Linear(4, 2)
+        self.conv2 = nn.Conv2d(16, 32, 3, stride = 1, padding = 1)
+        self.conv3 = nn.Conv2d(32, 64, 3, stride = 1, padding = 1)
+        self.conv4 = nn.Conv2d(64, 128, 3, stride = 1, padding = 1)
+        self.conv5 = nn.Conv2d(128, 256, 3, stride = 1, padding = 1)
+        self.fc1 = nn.Linear(4 * 4 * 256, 4096)
+        self.fc2 = nn.Linear(4096, 2048)
+        self.fc3 = nn.Linear(2048, 512)
+        self.fc4 = nn.Linear(512, 128)
+        self.fc5 = nn.Linear(128, 64)
+        self.fc6 = nn.Linear(64, 16)
+        self.fc7 = nn.Linear(16, 4)
+        self.fc8 = nn.Linear(4, 2)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -39,13 +41,15 @@ class Chrominance_Regressor(nn.Module):
         x = F.relu(self.fc3(x))
         x = F.relu(self.fc4(x))
         x = F.relu(self.fc5(x))
-        x = self.fc6(x)
+        x = F.relu(self.fc6(x))
+        x = F.relu(self.fc7(x))
+        x = self.fc8(x)
         return x
 
 #Regressor
 def train_chrominance_reg(trainloader, device):
     EPOCH_COUNT = 16
-    LEARNING_RATE = 0.003
+    LEARNING_RATE = 0.001
 
     net = Chrominance_Regressor()
 
