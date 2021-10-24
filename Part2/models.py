@@ -1,12 +1,9 @@
-from numpy.__config__ import show
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from datetime import datetime
 import numpy as np
 import cv2
 
-CHROMREG_MINIBATCH_SIZE = 8
+CHROMREG_MINIBATCH_SIZE = 12
 COLORIZE_MINIBATCH_SIZE = 8
 
 # REF: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -15,28 +12,30 @@ class Chrominance_Regressor(nn.Module):
         super(Chrominance_Regressor, self).__init__()
         
         self.predict = nn.Sequential(    
-            nn.Conv2d(1, 16, 3, stride = 1, padding = 1),
+            nn.Conv2d(1, 32, 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(16, 32, 3, stride = 1, padding = 1),
+            nn.Conv2d(16, 64, 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(32, 64, 3, stride = 1, padding = 1),
+            nn.Conv2d(32, 128, 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(64, 128, 3, stride = 1, padding = 1),
+            nn.Conv2d(64, 256, 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(128, 256, 3, stride = 1, padding = 1),
+            nn.Conv2d(128, 512, 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
-            nn.Conv2d(256, 512, 3, stride = 1, padding = 1),
+            nn.Conv2d(256, 1024, 3, stride = 1, padding = 1),
             nn.ReLU(),
             nn.MaxPool2d(2, 2),
 
             nn.Flatten(),
 
-            nn.Linear(2 * 2 * 512, 2048),
+            nn.Linear(2 * 2 * 1024, 4096),
+            nn.ReLU(),
+            nn.Linear(4096, 2048),
             nn.ReLU(),
             nn.Linear(2048, 1024),
             nn.ReLU(),
@@ -59,14 +58,13 @@ class Chrominance_Regressor(nn.Module):
             nn.Linear(4, 2)
         )
     def forward(self, input):
-        # Upsample to get colors
         output = self.predict(input)
         return output
 
 #Regressor
 def train_chrominance_reg(trainloader, device):
-    EPOCH_COUNT = 32
-    LEARNING_RATE = 0.0005
+    EPOCH_COUNT = 40
+    LEARNING_RATE = 0.0002
 
     net = Chrominance_Regressor()
 
