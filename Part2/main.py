@@ -128,7 +128,7 @@ augmentations = [
     lambda x: flip_horiz(scale_rgb(x)),
     lambda x: scale_rgb(random_crop(x, (0.65, 0.9))),
     lambda x: flip_horiz(random_crop(scale_rgb(x), (0.65, 0.9))),
-    
+
     lambda x: flip_horiz(random_crop(x, (0.3, 0.7))),
     lambda x: scale_rgb(random_crop(x, (0.3, 0.7))),
 ]
