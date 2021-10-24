@@ -158,8 +158,8 @@ def chrominance_regressor_main():
         results = model(images)
         results = results.detach().cpu()
         outputs = outputs.cpu()
-        for i,val in enumerate(zip(outputs.numpy(),results.numpy())):
-            print("Test Image #{}:\tExpected:{}\tActual:{}".format(i+1, val[0], val[1]))
+        for j,val in enumerate(zip(outputs.numpy(),results.numpy())):
+            print("Test Image #{}:\tExpected:{}\tActual:{}".format(j+1, val[0], val[1]))
         criterion = nn.MSELoss()
         loss = criterion(outputs,results)
         print(" --- Test Batch #%d Loss: %f ---" % (i+1, loss))

@@ -14,20 +14,22 @@ class Chrominance_Regressor(nn.Module):
     def __init__(self):
         super().__init__()
         # implementation of convolution downsampling and FC layers for regression output
-        self.conv1 = nn.Conv2d(1, 16, 3, stride = 1, padding = 1)
+        self.conv1 = nn.Conv2d(1, 8, 3, stride = 1, padding = 1)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(16, 32, 3, stride = 1, padding = 1)
-        self.conv3 = nn.Conv2d(32, 64, 3, stride = 1, padding = 1)
+        self.conv2 = nn.Conv2d(16, 16, 3, stride = 1, padding = 1)
+        self.conv3 = nn.Conv2d(32, 32, 3, stride = 1, padding = 1)
         self.conv4 = nn.Conv2d(64, 64, 3, stride = 1, padding = 1)
         self.conv5 = nn.Conv2d(64, 128, 3, stride = 1, padding = 1)
         self.fc1 = nn.Linear(4 * 4 * 128, 1024)
         self.fc2 = nn.Linear(1024, 512)
-        self.fc3 = nn.Linear(512, 128)
-        self.fc4 = nn.Linear(128, 64)
-        self.fc5 = nn.Linear(64, 32)
-        self.fc6 = nn.Linear(32, 16)
-        self.fc7 = nn.Linear(16, 8)
-        self.fc8 = nn.Linear(8, 2)
+        self.fc3 = nn.Linear(512, 256)
+        self.fc4 = nn.Linear(256, 128)
+        self.fc5 = nn.Linear(128, 64)
+        self.fc6 = nn.Linear(64, 32)
+        self.fc7 = nn.Linear(32, 16)
+        self.fc8 = nn.Linear(16, 8)
+        self.fc9 = nn.Linear(8, 4)
+        self.fc10 = nn.Linear(4, 2)
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -43,13 +45,15 @@ class Chrominance_Regressor(nn.Module):
         x = F.relu(self.fc5(x))
         x = F.relu(self.fc6(x))
         x = F.relu(self.fc7(x))
-        x = self.fc8(x)
+        x = F.relu(self.fc8(x))
+        x = F.relu(self.fc9(x))
+        x = self.fc10(x)
         return x
 
 #Regressor
 def train_chrominance_reg(trainloader, device):
-    EPOCH_COUNT = 16
-    LEARNING_RATE = 0.001
+    EPOCH_COUNT = 24
+    LEARNING_RATE = 0.002
 
     net = Chrominance_Regressor()
 
