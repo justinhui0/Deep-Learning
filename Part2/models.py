@@ -193,7 +193,8 @@ def train_colorizer(trainloader, device):
                     (epoch + 1, i + 1, running_loss / statistics_count))
                 running_loss = 0
             fname = "train_image_results/img-epoch-{0:03d}.png".format(epoch)
-            write_img(fname, inputs, outputs, expected)
+            outputs = outputs.detach()
+            write_img(fname, inputs[0], outputs[0], expected[0])
                 
     return net
 
