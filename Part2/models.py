@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 import cv2
 
-CHROMREG_MINIBATCH_SIZE = 10
+CHROMREG_MINIBATCH_SIZE = 12
 COLORIZE_MINIBATCH_SIZE = 8
 
 # REF: https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -64,7 +64,7 @@ class Chrominance_Regressor(nn.Module):
 #Regressor
 def train_chrominance_reg(trainloader, device):
     EPOCH_COUNT = 24
-    LEARNING_RATE = 0.00015
+    LEARNING_RATE = 0.0002
 
     net = Chrominance_Regressor()
 
