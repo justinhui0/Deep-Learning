@@ -208,7 +208,7 @@ def colorization_main():
     print("\n --- Average MSE Loss: %f" % (total_loss / count))
 
 if __name__ == '__main__':
-    regressor = True
+    regressor = False
 
     if regressor:
         print(" --- Training Regressor ---")
