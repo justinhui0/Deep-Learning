@@ -169,7 +169,7 @@ def chrominance_regressor_main():
     print("\n --- Average MSE Loss: %f" % (total_loss / count))
 
     
-def colorization_main(model_path=""):
+def colorization_main():
     
     print(" --- Loading Data ---")
     # implementing dataloader on the dataset and printing per batch
